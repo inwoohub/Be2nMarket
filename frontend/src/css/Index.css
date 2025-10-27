@@ -1,0 +1,62 @@
+.Indexpage{
+    height : 100vh;
+    width: 100vw;
+    background-color: #212121;
+    justify-content: center;
+    display : flex;
+}
+
+.subIndexpage{
+    height : 100vh;
+    width : 30vw;
+    background-color : #16171B;
+}
+
+.textIndexpagediv{
+    display : flex;
+    justify-content: center;
+    margin-top: 25vh;
+}
+
+.textIndexpagediv2{
+    display : flex;
+    justify-content: center;
+    margin-top: 1vh;
+}
+
+.spanIndexpage{
+    font-size : 25px;
+    font-weight: bold;
+    color : #FFFFFF;
+}
+
+.Login_input{
+    margin-top: 30vh;
+    justify-content: center;
+    display : flex;
+}
+
+.kakao_login{
+    cursor: pointer;
+    width : 13vw;
+}
+
+@media (max-width: 768px) {
+
+    .subIndexpage{
+        height : 100vh;
+        width : 100vw;
+        background-color : #16171B;
+    }
+
+    .spanIndexpage{
+        font-size : 17px;
+        font-weight: bold;
+        color : #FFFFFF;
+    }
+
+    .kakao_login{
+        cursor: pointer;
+        width : 60vw;
+    }
+}
