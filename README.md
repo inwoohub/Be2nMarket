@@ -6,7 +6,7 @@
 ## 기술 스택
 backend - Java (SpringBoot)\
 frontend - React (HTML, CSS3, JS)\
-DataBase - MySQL\
+DataBase - MySQL
 DevOps - AWS(EC2, RDS, S3), Docker, NGINX
 
 ## 아키텍처
