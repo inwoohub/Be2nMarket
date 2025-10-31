@@ -1,3 +1,6 @@
+
+// DB저장 잘 되나 테스트용 코드입니다~ 하드코딩했어요
+
 package com.example.repository;
 
 import com.example.entity.User;
@@ -33,7 +36,8 @@ class UserRepositoryTest {
 
         // given
         User u = User.builder()
-                .nickname("세준")
+                .user_id(Long.valueOf(1234567890))
+                .nickname("인우")
                 .profile_image_url("https://solved.ac/profile/dlsdndls")
                 .build(); // manner_score는 @Builder.Default로 36.5
 
@@ -43,7 +47,7 @@ class UserRepositoryTest {
 
         // then:
         User found = userRepository.findById(saved.getUser_id()).orElseThrow();
-        assertThat(found.getNickname()).isEqualTo("세준");
+        assertThat(found.getNickname()).isEqualTo("인우");
         assertThat(found.getManner_score()).isEqualByComparingTo(new BigDecimal("36.5"));
     }
 }

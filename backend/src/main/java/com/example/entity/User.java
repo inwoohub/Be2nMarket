@@ -12,7 +12,7 @@ import org.hibernate.annotations.UpdateTimestamp;
 public class User {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name="user_id", nullable=false)
     private Long user_id;
 
     @Column(nullable = false, length = 40)
