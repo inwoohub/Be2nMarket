@@ -1,11 +1,12 @@
+// src/main/java/com/example/entity/User.java
 package com.example.entity;
+
 import jakarta.persistence.*;
 import lombok.*;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
-
 
 @Getter @Setter @NoArgsConstructor @AllArgsConstructor @Builder
 @Entity @Table(name = "user")
@@ -21,8 +22,8 @@ public class User {
     @Column(length = 255)
     private String profile_image_url;
 
-    @Column(precision = 4, scale = 1)
     @Builder.Default
+    @Column(precision = 4, scale = 1)
     private BigDecimal manner_score = new BigDecimal("36.5");
 
     @CreationTimestamp

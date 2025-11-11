@@ -1,6 +1,11 @@
 
 import "../css/Index.css";
 
+
+const handleKakaoLogin = () => {
+    window.location.href = "http://localhost:8080/oauth2/authorization/kakao";
+};
+
 function Index() {
 
     return (
@@ -17,7 +22,7 @@ function Index() {
                     </span>
                 </div>
                 <div className="Login_input">
-                    <img className="kakao_login" alt="카카오 로그인" src="/kakao_login.png" />
+                    <img className="kakao_login" onClick={handleKakaoLogin} alt="카카오 로그인" src="/kakao_login.png" />
                 </div>
             </div>
         </div>
