@@ -9,8 +9,8 @@ const handleKakaoLogin = () => {
 function Index() {
 
     return (
-        <div className="Indexpage">
-            <div className="subIndexpage">
+        <div className="app-shell">
+            <div className="sub-app-shell">
                 <div className="textIndexpagediv">
                     <span className="spanIndexpage">
                         무한루프 장터에 오신 것을 환영합니다.

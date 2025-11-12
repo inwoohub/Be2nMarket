@@ -36,10 +36,6 @@
     display : flex;
 }
 
-.kakao_login{
-    cursor: pointer;
-    width : 13vw;
-}
 
 @media (max-width: 768px) {
 
@@ -55,8 +51,4 @@
         color : #FFFFFF;
     }
 
-    .kakao_login{
-        cursor: pointer;
-        width : 200px;
-    }
 }

@@ -18,7 +18,7 @@ import java.util.Map;
 public class CustomOAuth2AuthenticationSuccessHandler implements AuthenticationSuccessHandler {
 
     // 프론트 주소를 프로퍼티로 빼두면 환경별로 바꾸기 편함
-    @Value("${app.frontend.redirect-url:http://localhost:8080/health}")
+    @Value("${app.frontend.redirect-url:http://localhost:3000/main}")
     private String redirectUrl;
 
     @Override
