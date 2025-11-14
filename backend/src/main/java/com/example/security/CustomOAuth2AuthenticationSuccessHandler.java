@@ -18,20 +18,25 @@ import java.util.Map;
 public class CustomOAuth2AuthenticationSuccessHandler implements AuthenticationSuccessHandler {
 
     // 프론트 주소를 프로퍼티로 빼두면 환경별로 바꾸기 편함
-    @Value("${app.frontend.redirect-url:http://localhost:3000/main}")
-    private String redirectUrl;
+
+    @Value("${app.frontend.base-url:http://localhost:3000}")
+    private String frontendBaseUrl;
 
     @Override
     public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response,
                                         Authentication authentication) throws IOException {
+
+        Long kakaoId = null;
+        String nickname = "사용자";
+
         // 1) Principal 에서 카카오 id / 닉네임 추출
         if (authentication instanceof OAuth2AuthenticationToken token) {
             OAuth2User principal = token.getPrincipal();
             Map<String, Object> attrs = principal.getAttributes();
 
-            Long kakaoId = Long.valueOf(String.valueOf(attrs.get("id")));
+            kakaoId = Long.valueOf(String.valueOf(attrs.get("id")));
 
-            String nickname = "사용자";
+            nickname = "사용자";
             Object ka = attrs.get("kakao_account");
             if (ka instanceof Map<?, ?> kaMap) {
                 Object pf = kaMap.get("profile");
@@ -47,7 +52,12 @@ public class CustomOAuth2AuthenticationSuccessHandler implements AuthenticationS
             request.getSession(true).setAttribute("USER", new SessionUser(kakaoId, nickname));
         }
 
-        // 3) 프론트로 리다이렉트
-        response.sendRedirect(redirectUrl);
+        if (kakaoId != null) {
+            String redirect = frontendBaseUrl + "/main/" + kakaoId;
+            response.sendRedirect(redirect);
+        } else {
+            // 혹시 모를 경우 기본 페이지
+            response.sendRedirect(frontendBaseUrl + "/");
+        }
     }
 }
