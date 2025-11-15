@@ -11,6 +11,9 @@ import MainPage from "./pages/MainPage";
 import ProfilePage from "./pages/ProfilePage";
 import ChatPage from "./pages/ChatPage";
 
+//css
+import "./css/App.css";
+
 function App() {
 
     const [auth, setAuth] = useState({ loading: true, user: null });
@@ -41,19 +44,52 @@ function App() {
 
                         <Route path="/" element={<Index />} />
 
-                        {/* 헤더가 필요한 페이지 그룹 */}
-                        <Route element={<HeaderLayout />}>
-                            {/* 헤더만 있고 바텀네브 없는 페이지가 필요하면 여기서 바로 Route 작성 */}
-
-                            {/* 헤더 + 바텀네브 둘 다 필요한 페이지 그룹 */}
+                        {/* 메인 페이지: 헤더 + 바텀네브 */}
+                        <Route
+                            element={
+                                <HeaderLayout
+                                    title="메인"
+                                    left="로고"
+                                    right="알림"
+                                />
+                            }
+                        >
                             <Route element={<WithBottomNav />}>
                                 <Route path="/main/:userId" element={<MainPage />} />
                             </Route>
+                        </Route>
 
+                        {/* 채팅 페이지: 헤더 + 바텀네브 */}
+                        <Route
+                            element={
+                                <HeaderLayout
+                                    title="채팅"
+                                    isBack={true}
+                                    left={
+                                        <img className="Header-icon"  alt="뒤로가기" src="/backWhite.png" />
+                                    }
+                                    right="검색"
+                                />
+                            }
+                        >
                             <Route element={<WithBottomNav />}>
                                 <Route path="/chat/:userId" element={<ChatPage />} />
                             </Route>
+                        </Route>
 
+                        {/* ⭐ 프로필 페이지: 헤더 + 바텀네브 (여기 따로 설정) */}
+                        <Route
+                            element={
+                                <HeaderLayout
+                                    title="프로필"
+                                    isBack={true}
+                                    left={
+                                        <img className="Header-icon"  alt="뒤로가기" src="/backWhite.png" />
+                                    }
+                                    right="편집"
+                                />
+                            }
+                        >
                             <Route element={<WithBottomNav />}>
                                 <Route path="/profile/:userId" element={<ProfilePage />} />
                             </Route>

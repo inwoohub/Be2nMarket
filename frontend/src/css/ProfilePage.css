@@ -1,0 +1,24 @@
+.profilepage_Name{
+    margin-top: 7vh;
+    height: 12vh;
+    background-color: white;
+    border: 1px solid red;
+}
+
+.profilepage_profileFix{
+    height: 7vh;
+    background-color: white;
+    border: 1px solid red;
+}
+
+.profilepage_manner{
+    height: 11vh;
+    background-color: white;
+    border: 1px solid red;
+}
+
+.profilepage_reTrade{
+    height: 10vh;
+    background-color: white;
+    border: 1px solid red;
+}
