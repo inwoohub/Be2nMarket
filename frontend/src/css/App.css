@@ -1,5 +1,28 @@
+html, body {
+    height: 100%;
+    overflow-y: auto;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+}
+
+html::-webkit-scrollbar,
+body::-webkit-scrollbar {
+    display: none;
+}
+
 .Header-icon{
     width: 30px;
     cursor: pointer;
 }
 
+/* 크롬, 엣지, 사파리 등 WebKit 계열 */
+input[type="number"]::-webkit-outer-spin-button,
+input[type="number"]::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+/* 파이어폭스 */
+input[type="number"] {
+    -moz-appearance: textfield;
+}

@@ -13,9 +13,28 @@
     box-shadow: 0 2px 4px rgba(0,0,0,0.2);
     left: 50%;
     transform: translateX(-50%);
+    border-bottom: 1px solid #28292D;
+    font-weight: bold;
 }
 
+.Header-left{
+    width: 33.3%;
+    display: flex;
+    justify-content: center;
 
+}
+
+.Header-title{
+    width: 33.3%;
+    display: flex;
+    justify-content: center;
+}
+
+.Header-right{
+    width: 33.3%;
+    display: flex;
+    justify-content: center;
+}
 
 @media (max-width: 768px) {
     .App-Header{

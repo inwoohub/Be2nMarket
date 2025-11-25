@@ -1,24 +1,409 @@
-.profilepage_Name{
+.profilepage_name{
     margin-top: 7vh;
     height: 12vh;
-    background-color: white;
-    border: 1px solid red;
+    background-color: #111118;
+    display: flex;
+    flex-direction: row;
 }
 
 .profilepage_profileFix{
-    height: 7vh;
-    background-color: white;
-    border: 1px solid red;
+    height: 8vh;
+    background-color: #111118;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-bottom: 1px solid #333;
+}
+
+.profilepage_cash{
+    background-color: #1d2025;
+    height: 20vh;
+    border-bottom: 1px solid #333;
 }
 
 .profilepage_manner{
-    height: 11vh;
-    background-color: white;
-    border: 1px solid red;
+    height: 15vh;
+    background-color: #1d2025;
+    color: white;
+    border-bottom: 1px solid #333;
 }
 
 .profilepage_reTrade{
     height: 10vh;
-    background-color: white;
+    background-color: #1d2025;
     border: 1px solid red;
+    color: white;
+}
+
+.profilepage_sale{
+    height: 8vh;
+    background-color: #1d2025;
+    color: white;
+    border-bottom: 1px solid #333;
+    text-decoration: none;  /* 밑줄 제거 */
+    color: inherit;         /* 부모 색상 그대로 사용 (선택) */
+    display: flex;
+    flex-direction: row;
+    cursor: pointer;
+}
+
+
+.profilepage_review{
+    background-color: #1d2025;
+    margin-bottom: 10vh;
+    color: white;
+    overflow-y: auto;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+}
+
+.profilepage_review::-webkit-scrollbar {
+    display: none;
+}
+
+
+.profilepage_name_left{
+    width: 30vw;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.profilepage_name_right{
+    width: 70vw;
+    display: flex;
+    align-items: center;
+    font-weight: bold;
+    color: white;
+}
+
+.profilepage_profileImage{
+    height: 60px;
+    width: 60px;
+    border-radius: 50%;   /* ✅ 동그라미로 만들기 */
+    object-fit: cover;    /* ✅ 이미지를 꽉 채우되 비율 유지 */
+
+}
+
+.profilepage_profileFix_btn{
+    width: 25vw;
+    height: 4.5vh;
+    background-color: #ffa324;
+    color: white;
+    font-weight: bold;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+.profilepage_profileFix_btn:hover{
+    background-color: #e1901f;
+}
+
+.profilepage_cash_title{
+    height: 5vh;
+    display: flex;
+    align-items: center;
+    margin-left: 1vw;
+    font-weight: bold;
+    color: white;
+    font-size: 14px;
+}
+
+.profilepage_cash_content{
+    display: flex;
+    flex-direction: row;
+    height: 15vh;
+    align-items: center;
+    color: white;
+}
+
+.profilpage_cash_content_section1{
+    height: 15vh;
+    width:50%;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+
+}
+
+.profilpage_cash_content_section2{
+    height: 15vh;
+    width:50%;
+    justify-items: right;
+}
+
+.profilepage_cash_btn{
+    height: 4.5vh;
+    margin-left: 2vw;
+    width: 10vw;
+    background-color: #111118;
+    color: white;
+    font-weight: bold;
+    border-radius: 5px;
+    cursor: pointer;
+    font-weight: bold;
+    font-size: 12px;
+    margin-top: 1vh;
+    border: 1px solid #ffa324;
+}
+.profilepage_cash_btn:hover{
+    background-color: #232429;
+}
+
+.profilepage_cash_currentCash{
+    color: white;
+    font-weight: bold;
+    margin-right: 2vw;
+    margin-top: 8vh;
+}
+
+.profilepage_manner_middle{
+    justify-items: center;
+
+}
+
+.profilepage_manner_title{
+    height: 5vh;
+    display: flex;
+    align-items: center;
+    margin-left: 1vw;
+    font-weight: bold;
+    color: white;
+    font-size: 14px;
+}
+
+.profilepage_manner_value {
+    width: 90%;
+    display: flex;
+    justify-content: flex-end;
+    font-size: 12px;
+    font-weight: bold;
+    margin-bottom: 5px;
+}
+
+/* 바 전체 (배경) */
+.profilepage_manner_bar {
+    width: 90%;
+    height: 10px;              /* 막대 두께 */
+    background: #2b2b33;       /* 바 배경색 */
+    border-radius: 999px;      /* 완전 둥글게 */
+    overflow: hidden;          /* 내부 fill이 튀어나오지 않게 */
+}
+
+/* 채워지는 부분 */
+.profilepage_manner_bar_fill {
+    height: 90%;
+    width: 0;                  /* JS에서 인라인 스타일로 덮어씀 */
+    background: linear-gradient(90deg, #4fc3f7, #ff9800);
+    border-radius: inherit;
+    transition: width 0.3s ease; /* 값 바뀔 때 부드럽게 */
+}
+
+/* 0 / 50 / 100 눈금 */
+.profilepage_manner_scale {
+    width: 90%;
+    display: flex;
+    justify-content: space-between;
+    margin-top: 4px;
+    font-size: 10px;
+    color: #a0a0b0;
+}
+
+.profilepage_sale_left{
+    height: 8vh;
+    width: 20vw;
+    align-items: center;
+    margin-left: 1vw;
+    font-weight: bold;
+    color: white;
+    font-size: 14px;
+    display: flex;
+
+}
+
+.profilepage_sale_right{
+    height: 8vh;
+    align-items: center;
+    font-weight: bold;
+    color: white;
+    font-size: 14px;
+    display: flex;
+    flex-direction: row;
+    margin-left: 5vw;
+}
+
+.profilepage_sale_title{
+    width: 50%;
+    color: white;
+}
+
+.profilepage_right_arrow{
+    width: 15px;
+    height: 15px;
+}
+
+.profilepage_review_sub{
+    height: 8vh;
+    background-color: #1d2025;
+    color: white;
+    text-decoration: none;  /* 밑줄 제거 */
+    color: inherit;         /* 부모 색상 그대로 사용 (선택) */
+    display: flex;
+    flex-direction: row;
+    cursor: pointer;
+}
+
+/* ===== 리뷰 리스트 영역 ===== */
+.profilepage_review_content {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    flex-direction: column;
+    gap: 10px;               /* 카드 사이 간격 */
+}
+
+/* 리뷰 없을 때 */
+.profilepage_review_empty {
+    padding: 18px 0;
+    font-size: 0.9rem;
+    color: #9da3b0;
+    text-align: center;
+}
+
+/* ===== 개별 리뷰 카드 ===== */
+.profilepage_review_card {
+    width: 80%;
+    display: flex;
+    gap: 12px;
+    padding: 10px 12px;
+    border-radius: 10px;
+    background-color: #262a31;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.28);
+    transition: background-color 0.2s ease, transform 0.15s ease;
+}
+
+.profilepage_review_card:hover {
+    background-color: #2c313a;
+    transform: translateY(-1px);
+}
+
+/* 왼쪽 아바타 영역 */
+.review_card_left {
+    flex-shrink: 0;
+}
+
+.review_avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: #353a44;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+    font-size: 0.9rem;
+    color: #ffffff;
+}
+
+/* 오른쪽 내용 영역 */
+.review_card_right {
+    flex: 1;
+}
+
+/* 닉네임 + 날짜 라인 */
+.review_card_top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2px;
+    font-size: 0.85rem;
+}
+
+.review_from_nickname {
+    font-weight: 600;
+    color: #ffffff;
+}
+
+.review_created_at {
+    color: #9da3b0;
+    font-size: 0.78rem;
+}
+
+/* 별점 라인 */
+.review_card_rating {
+    font-size: 0.9rem;
+    margin-bottom: 4px;
+}
+
+.star_filled {
+    color: #ffd560;
+}
+
+.star_empty {
+    color: #555b66;
+}
+
+/* 코멘트 텍스트 */
+.review_card_comment {
+    font-size: 0.9rem;
+    line-height: 1.4;
+    color: #e4e7ee;
+    margin-bottom: 3px;
+}
+
+/* 거래 정보 (작게 아래쪽에) */
+.review_card_trade {
+    font-size: 0.78rem;
+    color: #a3abb9;
+}
+
+.review_bottom_magrin{
+    margin-bottom: 2vh;
+}
+
+
+
+
+/* 화면 크기 감소 설정*/
+@media (max-width: 768px) {
+    .profilepage_profileFix_btn{
+        width: 80vw;
+    }
+
+    .profilepage_cash_title{
+        margin-left: 5vw;
+    }
+
+    .profilepage_cash_btn{
+        margin-left: 8vw;
+        width:30vw;
+    }
+
+    .profilepage_cash_currentCash{
+        margin-right: 8vw;
+    }
+
+    .profilepage_sale_header{
+        margin-left: 0vw;
+    }
+
+    .profilepage_manner_title{
+        margin-left: 5vw;
+    }
+
+    .profilepage_sale_title{
+        margin-left: 4vw;
+    }
+
+    .profilepage_sale_left{
+        width: 50vw;
+    }
+
+    .profilepage_sale_right{
+        margin-left: 37vw;
+    }
+
+    .review_bottom_magrin{
+        margin-bottom: 10vh;
+    }
 }

@@ -9,13 +9,15 @@ export default function BottomNav() {
     const [hoveredTab, setHoveredTab] = useState(null);
     const {loading,user } = useContext(AuthContext);
 
+
+
     if (loading) return null;
 
     // 경로 설정 및 로그인 풀리면 로그인 페이지
     const userId = user?.userId;
-    const mainPath = userId ? `/main/${userId}` : "/login";
-    const chatPath = userId ? `/chat/${userId}` : "/login";
-    const profilePath = userId ? `/profile/${userId}` : "/login";
+    const mainPath = userId ? `/main/${userId}` : "/";
+    const chatPath = userId ? `/chat/${userId}` : "/";
+    const profilePath = userId ? `/profile/${userId}` : "/";
 
 
 
