@@ -1,5 +1,7 @@
 package com.example.entity;
 
+import com.example.entity.enums.EasyPayType;
+import com.example.entity.enums.PaymentMethodType;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
@@ -8,7 +10,11 @@ import java.time.LocalDateTime;
 import com.example.entity.enums.TradePaymentPurpose;
 import com.example.entity.enums.TradePaymentStatus;
 
-@Getter @Setter @NoArgsConstructor @AllArgsConstructor @Builder
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
 @Entity
 @Table(
         name = "tradePayment",
@@ -30,10 +36,6 @@ public class TradePayment {
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "payment_method_id")
-    private PaymentMethod paymentMethod; // nullable
-
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 8)
     private TradePaymentPurpose purpose;
@@ -50,7 +52,27 @@ public class TradePayment {
     private TradePaymentStatus status = TradePaymentStatus.PENDING;
 
     @Column(length = 100)
+    private String paymentKey;
+
+    @Column(length = 100)
+    private String orderId;
+
+    @Enumerated(EnumType.STRING)
+    @Column(length = 20)
+    private PaymentMethodType method_type;
+
+    @Enumerated(EnumType.STRING)
+    @Column(length = 20)
+    private EasyPayType easyPayType;
+
+    @Column(length = 30)
+    private String pg_status;
+
+    @Column(length = 100)
     private String provider_tx_id;
+
+    @Column(columnDefinition = "TEXT")
+    private String pg_raw_response;
 
     @CreationTimestamp
     private LocalDateTime created_at;

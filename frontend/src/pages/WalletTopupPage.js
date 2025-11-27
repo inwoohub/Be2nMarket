@@ -7,7 +7,7 @@ import { useNavigate, useParams } from "react-router-dom";
 
 import "../css/TossPayment.css";
 
-const clientKey = "test_ck_XZYkKL4Mrj1Jezbn5N2aV0zJwlEW"; // API 개별 연동 클라이언트 키
+const clientKey = process.env.REACT_APP_TOSS_CLIENT_KEY;
 
 
 export default function WalletTopupPage() {
@@ -33,7 +33,7 @@ export default function WalletTopupPage() {
             // 1) SDK 로드
             const tossPayments = await loadTossPayments(clientKey);
 
-            // 2) 결제창 호출 (여기서는 카드 고정, 원하면 "가상계좌" 등으로 바꿀 수 있음)
+            // 2) 결제창 호출 ( 카드, 가상계좌, 휴대폰 중 택 1)
             await tossPayments.requestPayment("카드", {
                 amount,
                 orderId: nanoid(),
@@ -41,7 +41,7 @@ export default function WalletTopupPage() {
                 successUrl: `${window.location.origin}/wallet/topup/success`,
                 failUrl: `${window.location.origin}/wallet/topup/fail`,
                 customerName: "테스트유저",
-                customerEmail: "test@example.com",
+                customerEmail: "",
             });
         } catch (err) {
             // 사용자가 창 닫으면 USER_CANCEL 이 옴

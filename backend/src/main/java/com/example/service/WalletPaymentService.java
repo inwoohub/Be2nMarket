@@ -3,10 +3,9 @@ package com.example.service;
 
 import com.example.config.TossPaymentProperties;
 import com.example.entity.*;
-import com.example.entity.enums.LedgerEntryType;
-import com.example.entity.enums.TradePaymentPurpose;
-import com.example.entity.enums.TradePaymentStatus;
+import com.example.entity.enums.*;
 import com.example.repository.*;
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -30,6 +29,13 @@ public class WalletPaymentService {
     private final UserRepository userRepository;
     private final ObjectMapper objectMapper; // JSON 파싱용
 
+    private record TossConfirmResult(
+            String status,
+            String method,
+            String easyPayProvider,
+            String rawResponse
+    ) {}
+
     @Transactional
     public void confirmTopup(Long userId, String paymentKey, String orderId, Long amount) {
 
@@ -40,7 +46,7 @@ public class WalletPaymentService {
         TradePayment tradePayment = TradePayment.builder()
                 .user(user)
                 .trade(null)
-                .paymentMethod(null)
+                .method_type(null)
                 .purpose(TradePaymentPurpose.TOPUP)
                 .amount(amount)
                 .fee_amount(0L)
@@ -49,9 +55,20 @@ public class WalletPaymentService {
                 .build();
         tradePaymentRepository.save(tradePayment);
 
+        TossConfirmResult tossResult = confirmWithToss(paymentKey, orderId, amount);
 
-        confirmWithToss(paymentKey, orderId, amount);
+        tradePayment.setPaymentKey(paymentKey);
+        tradePayment.setOrderId(orderId);
+        tradePayment.setPg_status(tossResult.status());
+        tradePayment.setPg_raw_response(tossResult.rawResponse());
 
+        tradePayment.setMethod_type(
+                PaymentMethodType.fromCode(tossResult.method())
+        );
+
+        tradePayment.setEasyPayType(
+                EasyPayType.fromCode(tossResult.easyPayProvider())
+        );
 
         Wallet wallet = walletRepository.findByUser(user)
                 .orElseGet(() -> {
@@ -65,7 +82,6 @@ public class WalletPaymentService {
         Long newBalance = wallet.getBalance() + amount;
         wallet.setBalance(newBalance);
 
-
         WalletLedger ledger = WalletLedger.builder()
                 .user(user)
                 .trade(null)
@@ -74,14 +90,15 @@ public class WalletPaymentService {
                 .amount(amount)
                 .fee_amount(0L)
                 .balance_after(newBalance)
-                .memo("토스 테스트 충전")
+                .memo("토스 충전")
                 .build();
         walletLedgerRepository.save(ledger);
+
 
         tradePayment.setStatus(TradePaymentStatus.SUCCEEDED);
     }
 
-    private void confirmWithToss(String paymentKey, String orderId, Long amount) {
+    private TossConfirmResult confirmWithToss(String paymentKey, String orderId, Long amount) {
         try {
 
             String auth = tossProps.getSecretKey() + ":";
@@ -114,6 +131,26 @@ public class WalletPaymentService {
             InputStream is = conn.getInputStream();
             String resp = new String(is.readAllBytes(), StandardCharsets.UTF_8);
 
+            // 🔵 JSON 파싱
+            Map<String, Object> respMap = objectMapper.readValue(
+                    resp, new TypeReference<Map<String, Object>>() {}
+            );
+
+            String status = (String) respMap.get("status");
+            String method = (String) respMap.get("method");
+
+            String easyPayProvider = null;
+            Object easyPayObj = respMap.get("easyPay");
+            if (easyPayObj instanceof Map<?, ?> easyPayMap) {
+                Object provider = easyPayMap.get("provider");
+                if (provider != null) {
+                    easyPayProvider = provider.toString();
+                }
+            }
+            System.out.println("[TOSS CONFIRM] method=" + method + ", easyPayProvider=" + easyPayProvider);
+
+
+            return new TossConfirmResult(status, method, easyPayProvider, resp);
 
         } catch (IOException e) {
             throw new RuntimeException("Toss 승인 요청 중 에러", e);
