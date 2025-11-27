@@ -1,0 +1,59 @@
+# ===================== backend (Spring Boot) =====================
+
+# Gradle / 빌드 결과
+/backend/build/
+/backend/out/
+/backend/bin/
+/backend/.gradle/
+
+# 로그 / 임시 파일
+/backend/*.log
+/backend/*.tmp
+
+# IDE 관련 (혹시 backend 밑에 따로 생길 경우)
+/backend/.idea/
+/backend/*.iml
+/backend/*.ipr
+/backend/*.iws
+/backend/.project
+/backend/.classpath
+/backend/.settings/
+/backend/.sts4-cache/
+
+# OS 잡파일
+/backend/.DS_Store
+
+# Spring Boot 설정 파일 (민감 정보 들어가는 것들)
+/backend/src/main/resources/application.properties
+/backend/src/main/resources/application-local.properties
+/backend/src/main/resources/application-secret.properties
+
+# yml도 같이 쓰면
+/backend/src/main/resources/application.yml
+/backend/src/main/resources/application-*.yml
+
+
+# ==== frontend 전용 ignore ====
+
+# dependencies
+/frontend/node_modules
+/frontend/.pnp
+/frontend/.pnp.js
+
+# testing
+/frontend/coverage
+
+# production
+/frontend/build
+
+# misc
+/frontend/.DS_Store
+/frontend/.env
+/frontend/.env.local
+/frontend/.env.development.local
+/frontend/.env.test.local
+/frontend/.env.production.local
+
+/frontend/npm-debug.log*
+/frontend/yarn-debug.log*
+/frontend/yarn-error.log*
