@@ -1,4 +1,4 @@
-import React, {useContext, useEffect, useState} from "react";
+import React, { useState, useEffect } from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import { AuthContext } from "./AuthContext";
 import Layout from "./layouts/Layout";
@@ -11,16 +11,16 @@ import MainPage from "./pages/MainPage";
 import ProfilePage from "./pages/ProfilePage";
 import ChatPage from "./pages/ChatPage";
 
-//css
+// CSS (src/css 폴더 안에 있는 진짜 파일을 불러옵니다)
 import "./css/App.css";
 
 function App() {
-
     const [auth, setAuth] = useState({ loading: true, user: null });
 
+    // 세션 체크 로직
     useEffect(() => {
         fetch("http://localhost:8080/api/session/me", {
-            credentials: "include", // 세션 쿠키 보내기
+            credentials: "include",
         })
             .then((res) => res.json())
             .then((data) => {
@@ -39,12 +39,12 @@ function App() {
         <AuthContext.Provider value={auth}>
             <Router>
                 <Routes>
-
                     <Route element={<Layout />}>
-
+                        
+                        {/* 1. 시작 페이지 (헤더/바텀네브 없음) */}
                         <Route path="/" element={<Index />} />
 
-                        {/* 메인 페이지: 헤더 + 바텀네브 */}
+                        {/* 2. 메인 페이지 (헤더 + 바텀네브) */}
                         <Route
                             element={
                                 <HeaderLayout
@@ -59,15 +59,13 @@ function App() {
                             </Route>
                         </Route>
 
-                        {/* 채팅 페이지: 헤더 + 바텀네브 */}
+                        {/* 3. 채팅 페이지 (헤더 + 바텀네브) */}
                         <Route
                             element={
                                 <HeaderLayout
                                     title="채팅"
                                     isBack={true}
-                                    left={
-                                        <img className="Header-icon"  alt="뒤로가기" src="/backWhite.png" />
-                                    }
+                                    left={<img className="Header-icon" alt="뒤로가기" src="/backWhite.png" />}
                                     right="검색"
                                 />
                             }
@@ -77,15 +75,13 @@ function App() {
                             </Route>
                         </Route>
 
-                        {/* ⭐ 프로필 페이지: 헤더 + 바텀네브 (여기 따로 설정) */}
+                        {/* 4. 프로필 페이지 (헤더 + 바텀네브) */}
                         <Route
                             element={
                                 <HeaderLayout
                                     title="프로필"
                                     isBack={true}
-                                    left={
-                                        <img className="Header-icon"  alt="뒤로가기" src="/backWhite.png" />
-                                    }
+                                    left={<img className="Header-icon" alt="뒤로가기" src="/backWhite.png" />}
                                     right="편집"
                                 />
                             }
@@ -96,7 +92,6 @@ function App() {
                         </Route>
 
                     </Route>
-
                 </Routes>
             </Router>
         </AuthContext.Provider>
