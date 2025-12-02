@@ -16,7 +16,6 @@ public enum EasyPayType {
     public static EasyPayType fromCode(String code) {
         if (code == null) return null;
         return switch (code) {
-            // 토스 문서 기준: 토스페이, 토스결제, TOSSPAY 등 다 올 수 있음
             case "TOSSPAY", "토스페이", "토스결제" -> TOSSPAY;
             case "NAVERPAY", "네이버페이" -> NAVERPAY;
             case "SAMSUNGPAY", "삼성페이" -> SAMSUNGPAY;

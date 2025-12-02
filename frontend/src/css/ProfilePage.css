@@ -407,3 +407,65 @@
         margin-bottom: 10vh;
     }
 }
+
+/* 📷 카메라 버튼: 사진 아래 가운데 살짝 겹치게 */
+
+.profilepage_avatar_wrapper {
+    position: relative;
+    display: inline-block;
+}
+
+.profilepage_camera_btn {
+    position: absolute;
+    left: 30%;
+    bottom: 0;
+    transform: translate(-50%, 50%); /* 가운데 정렬 + 아래로 50% 내려서 살짝 겹치게 */
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    border: none;
+    background-color: #ffffff;
+    font-size: 14px;          /* 이모지 크기 */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25);
+    padding: 0;
+}
+
+/* 호버 시 약간 강조 */
+.profilepage_camera_btn:hover {
+    background-color: #f3f3f3;
+}
+
+/* 비활성화(업로드 중) 상태 */
+.profilepage_camera_btn:disabled {
+    opacity: 0.6;
+    cursor: default;
+}
+
+.profilepage_clear_btn {
+    position: absolute;
+    left: 80%;
+    bottom: 0;
+    transform: translate(-50%, 50%); /* 가운데 정렬 + 아래로 50% 내려서 살짝 겹치게 */
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    border: none;
+    background-color: #ffffff;
+    font-size: 14px;          /* 이모지 크기 */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25);
+    padding: 0;
+}
+
+.profilepage_clear_btn:hover {
+    text-decoration: underline;
+}
