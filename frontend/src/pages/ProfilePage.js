@@ -1,7 +1,8 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import "../css/Index.css";
 import "../css/ProfilePage.css"
 import { Link, useNavigate } from "react-router-dom";
+import Modal from "../modal/ProfileModal";
 
 
 function ProfilePage() {
@@ -10,7 +11,15 @@ function ProfilePage() {
     const [profile, setProfile] = useState(null);
     const [loading, setLoading] = useState(true);
     const [cash, setCash] = useState(null);
+
+    const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+    const [editNickname, setEditNickname] = useState("");
+
+    const [uploading, setUploading] = useState(false);
+    const fileInputRef = useRef(null);
+
     const navigate = useNavigate();
+
 
     useEffect(() => {
         fetch("/api/me", {
@@ -20,6 +29,7 @@ function ProfilePage() {
             .then((data) => {
                 if (data.auth === "oauth2" && data.user) {
                     setProfile(data.user);
+                    setEditNickname(data.user.nickname || "");
                 }
                 setLoading(false);
             })
@@ -28,6 +38,112 @@ function ProfilePage() {
                 setLoading(false);
             });
     }, []);
+
+    const handleProfileEditClick = () => {
+        if (fileInputRef.current) {
+            fileInputRef.current.click();
+        }
+    };
+
+    const handleProfileImageChange = async (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        try {
+            setUploading(true);
+
+            const formData = new FormData();
+            formData.append("file", file);
+
+            const res = await fetch("/api/profile/image", {
+                method: "POST",
+                credentials: "include",
+                body: formData,
+            });
+
+            const data = await res.json();
+
+            if (!data.success) {
+                alert(data.message || "프로필 이미지 업로드 실패");
+                return;
+            }
+
+            setProfile((prev) =>
+                prev ? { ...prev, profileImageUrl: data.imageUrl } : prev
+            );
+
+            alert("프로필 이미지가 변경되었습니다!");
+        } catch (err) {
+            console.error("프로필 이미지 업로드 에러", err);
+            alert("업로드 중 오류가 발생했습니다.");
+        } finally {
+            setUploading(false);
+            e.target.value = "";
+        }
+    };
+
+    const handleDeleteProfileImage = async () => {
+        if (!window.confirm("프로필 사진을 기본 이미지로 되돌릴까요?")) {
+            return;
+        }
+
+        try {
+            const res = await fetch("/api/profile/image/delete", {
+                method: "POST",
+                credentials: "include",
+            });
+
+            const data = await res.json();
+
+            if (!data.success) {
+                alert(data.message || "프로필 사진 삭제 실패");
+                return;
+            }
+
+            setProfile((prev) =>
+                prev ? { ...prev, profileImageUrl: "" } : prev
+            );
+
+            alert("프로필 사진이 기본 이미지로 변경되었습니다.");
+        } catch (err) {
+            console.error("프로필 사진 삭제 에러", err);
+            alert("삭제 중 오류가 발생했습니다.");
+        }
+    };
+
+    const handleSaveProfile = async () => {
+        try {
+            const res = await fetch("/api/profile", {
+                method: "PATCH",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                credentials: "include",
+                body: JSON.stringify({
+                    nickname: editNickname,
+                }),
+            });
+
+            const data = await res.json();
+
+            if (!data.success) {
+                alert(data.message || "프로필 수정 실패");
+                return;
+            }
+
+            setProfile((prev) =>
+                prev ? { ...prev, nickname: data.nickname } : prev
+            );
+
+            alert("프로필이 수정되었습니다.");
+            setIsEditModalOpen(false);
+        } catch (err) {
+            console.error("프로필 수정 에러", err);
+            alert("프로필 수정 중 오류가 발생했습니다.");
+        }
+    };
+
+
 
     useEffect(() => {
         fetch("/api/wallet/balance", {
@@ -111,10 +227,7 @@ function ProfilePage() {
                 <div className="profilepage_profileFix">
                     <button
                         className="profilepage_profileFix_btn"
-                        onClick={() => {
-                            // 나중에 /profile/edit 같은 곳으로 이동 연결하면 됨
-                            alert("프로필 수정 화면은 나중에 붙일 예정!");
-                            }}
+                        onClick={() => setIsEditModalOpen(true)}
                         >
                         프로필 수정
                     </button>
@@ -278,8 +391,73 @@ function ProfilePage() {
 
                 </div>
             </div>
+            <Modal
+                isOpen={isEditModalOpen}
+                onClose={() => {
+                    setIsEditModalOpen(false);
+                    setEditNickname(profile.nickname || "");
+                }}
+                title="프로필 수정"
+            >
+                {/* 모달 내용 */}
+                <div className="profile_modal_avatar_section">
+                    <div className="profile_modal_avatar_wrapper">
+                        <img
+                            className="profilepage_profileImage"
+                            alt="프로필 사진"
+                            src={profileImageUrl}
+                        />
+                    </div>
+                    <div className="profile_modal_avatar_wrapper2">
+                        <button
+                            type="button"
+                            className="profile_modal_camera_btn"
+                            onClick={handleProfileEditClick}
+                            disabled={uploading}
+                        >
+                            이미지 변경
+                        </button>
+                        <button
+                            type="button"
+                            className="profile_modal_clear_btn"
+                            onClick={handleDeleteProfileImage}
+                        >
+                            이미지 삭제
+                        </button>
+                    </div>
+                </div>
+
+                <input
+                    type="file"
+                    accept="image/*"
+                    ref={fileInputRef}
+                    style={{ display: "none" }}
+                    onChange={handleProfileImageChange}
+                />
+
+                <div className="profile_modal_field">
+                    <input
+                        type="text"
+                        className="profile_modal_input"
+                        value={editNickname}
+                        onChange={(e) => setEditNickname(e.target.value)}
+                        maxLength={20}
+                    />
+                    <button
+                        type="button"
+                        className="profile_modal_save_btn"
+                        onClick={handleSaveProfile}
+                    >
+                        변경
+                    </button>
+                </div>
+            </Modal>
         </div>
+
+
     );
 }
 
 export default ProfilePage;
+
+

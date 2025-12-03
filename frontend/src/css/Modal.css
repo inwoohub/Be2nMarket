@@ -1,0 +1,155 @@
+.profile_modal_avatar_section {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;               /* 이미지와 버튼 사이 간격 */
+    margin-bottom: 16px;
+}
+
+
+.modal_backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.45);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 999;
+}
+
+.modal_container {
+    width: 20vw;
+    background: #fff;
+    border-radius: 12px;
+    padding: 20px 18px 16px;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+}
+
+/* 제목 */
+.modal_title {
+    font-size: 18px;
+    font-weight: 600;
+    margin-bottom: 16px;
+    text-align: center;
+}
+
+/* 내용 */
+.modal_body {
+    margin-bottom: 16px;
+
+}
+
+.profile_modal_avatar_wrapper{
+    display: flex;
+    justify-content: center;
+}
+
+
+.profile_modal_avatar_wrapper2 {
+    margin-top: 2vh;
+    display: flex;
+    justify-content: center;
+    gap: 5px;
+}
+
+.profile_modal_camera_btn {
+    border-radius: 8px;
+    border: none;
+    padding: 6px 10px;
+    font-size: 13px;
+    font-weight: bold;
+    cursor: pointer;
+    background: #ffa324;
+    color: #fff;
+    white-space: nowrap;
+
+}
+
+.profile_modal_clear_btn {
+    border-radius: 8px;
+    border: 1px solid #ddd;
+    padding: 6px 10px;
+    font-size: 13px;
+    font-weight: bold;
+    cursor: pointer;
+    background: #fff;
+    color: #555;
+    white-space: nowrap;
+}
+
+.profile_modal_camera_btn:hover {
+    background: #e1901f;
+}
+
+.profile_modal_clear_btn:hover {
+    background: #f6f6f6;
+}
+
+/* 모달 - 필드 전체 래퍼 */
+.profile_modal_field {
+    width: 100%;
+    margin-bottom: 16px;
+    display: flex;
+    justify-content: center;
+}
+
+/* 모달 - 라벨 */
+.profile_modal_label {
+    display: block;
+    font-size: 13px;
+    color: #555;
+    margin-bottom: 4px;
+    font-weight: bold;
+}
+
+/* 모달 - 텍스트 인풋 */
+.profile_modal_input {
+    width: 120px;
+    height: 5vh;
+    box-sizing: border-box;
+    padding: 8px 10px;
+    border-radius: 8px;
+    border: 1px solid #ddd;
+    font-size: 14px;
+    outline: none;
+    background-color: #fff;
+}
+
+/* 포커스 시 강조 */
+.profile_modal_input:focus {
+    border-color: #ff7e36;        /* 무한루프 포인트 컬러 느낌 */
+    box-shadow: 0 0 0 1px rgba(255, 126, 54, 0.15);
+}
+
+.profile_modal_save_btn{
+    height: 5vh;
+    border-radius: 8px;
+    border: 1px solid #ddd;
+    padding: 6px 10px;
+    font-size: 13px;
+    font-weight: bold;
+    cursor: pointer;
+    background: #fff;
+    color: #555;
+    margin-left: 5px;
+}
+
+
+/* 푸터(버튼 영역) */
+.modal_footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+}
+
+@media (max-width: 768px) {
+    .modal_container {
+        width: 80vw;
+        background: #fff;
+        border-radius: 12px;
+        padding: 20px 18px 16px;
+        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+    }
+
+
+}
