@@ -30,10 +30,8 @@ export default function WalletTopupPage() {
 
     const handleRequestPayment = async () => {
         try {
-            // 1) SDK 로드
             const tossPayments = await loadTossPayments(clientKey);
 
-            // 2) 결제창 호출 ( 카드, 가상계좌, 휴대폰 중 택 1)
             await tossPayments.requestPayment("카드", {
                 amount,
                 orderId: nanoid(),
@@ -44,7 +42,6 @@ export default function WalletTopupPage() {
                 customerEmail: "",
             });
         } catch (err) {
-            // 사용자가 창 닫으면 USER_CANCEL 이 옴
             if (err.code === "USER_CANCEL") {
                 alert("결제가 취소되었습니다.");
                 const profilePath = userId ? `/profile/${userId}` : "/";
