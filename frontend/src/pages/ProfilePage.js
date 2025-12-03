@@ -72,7 +72,6 @@ function ProfilePage() {
                 prev ? { ...prev, profileImageUrl: data.imageUrl } : prev
             );
 
-            alert("프로필 이미지가 변경되었습니다!");
         } catch (err) {
             console.error("프로필 이미지 업로드 에러", err);
             alert("업로드 중 오류가 발생했습니다.");
@@ -104,7 +103,6 @@ function ProfilePage() {
                 prev ? { ...prev, profileImageUrl: "" } : prev
             );
 
-            alert("프로필 사진이 기본 이미지로 변경되었습니다.");
         } catch (err) {
             console.error("프로필 사진 삭제 에러", err);
             alert("삭제 중 오류가 발생했습니다.");
@@ -135,7 +133,6 @@ function ProfilePage() {
                 prev ? { ...prev, nickname: data.nickname } : prev
             );
 
-            alert("프로필이 수정되었습니다.");
             setIsEditModalOpen(false);
         } catch (err) {
             console.error("프로필 수정 에러", err);
@@ -244,8 +241,11 @@ function ProfilePage() {
                             <button className="profilepage_cash_btn" onClick={() => navigate(`/wallet/topup/${userId}`)}>
                                 충전하기
                             </button>
-                            <button className="profilepage_cash_btn">
-                                송금하기
+                            <button
+                                className="profilepage_cash_btn"
+                                onClick={() => navigate(`/wallet/withdraw/${userId}`)}
+                            >
+                                출금하기
                             </button>
                         </div>
                         <div className="profilpage_cash_content_section2">
@@ -403,7 +403,7 @@ function ProfilePage() {
                 <div className="profile_modal_avatar_section">
                     <div className="profile_modal_avatar_wrapper">
                         <img
-                            className="profilepage_profileImage"
+                            className="profile_modal_profileImage"
                             alt="프로필 사진"
                             src={profileImageUrl}
                         />

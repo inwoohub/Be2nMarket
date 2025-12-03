@@ -10,7 +10,7 @@ function Modal({ isOpen, onClose, title, children, footer }) {
     };
 
     const handleContentClick = (e) => {
-        e.stopPropagation(); // 안쪽 클릭 시 배경으로 이벤트 안 올라가게
+        e.stopPropagation();
     };
 
     return (

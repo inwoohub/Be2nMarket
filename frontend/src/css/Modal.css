@@ -134,6 +134,14 @@
     margin-left: 5px;
 }
 
+.profile_modal_profileImage{
+    background-color: #111118;
+    height: 60px;
+    width: 60px;
+    border-radius: 50%;
+    object-fit: cover;
+}
+
 
 /* 푸터(버튼 영역) */
 .modal_footer {

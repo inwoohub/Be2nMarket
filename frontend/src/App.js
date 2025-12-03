@@ -13,6 +13,8 @@ import ChatPage from "./pages/ChatPage";
 import WalletTopupPage from "./pages/WalletTopupPage";
 import PayTopupSuccessPage from "./pages/PayTopupSuccessPage";
 import PayTopupFailPage from "./pages/PayTopupFailPage";
+import WalletWithdrawPage from "./pages/WalletWithdrawPage";
+import AdminWithdrawListPage from "./pages/AdminWithdrawListPage";
 
 //css
 import "./css/App.css";
@@ -122,6 +124,26 @@ function App() {
                             </Route>
                         </Route>
 
+                        {/* 출금 페이지 */}
+                        <Route
+                            element={
+                                <HeaderLayout
+                                    title="출금하기"
+                                    isBack={true}
+                                    left={
+                                        <img className="Header-icon"  alt="뒤로가기" src="/backWhite.png" />
+                                    }
+                                    right=""
+                                />
+                            }
+                        >
+                            <Route element={<WithBottomNav />}>
+                                <Route path="/wallet/withdraw/:userId" element={<WalletWithdrawPage />} />
+                            </Route>
+                        </Route>
+
+                        {/* 관리자 승인 페이지*/}
+                        <Route path="/admin/withdraw-requests" element={<AdminWithdrawListPage />} />
 
                         {/* 라우터 구분선 */}
                     </Route>

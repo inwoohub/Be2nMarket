@@ -1,0 +1,374 @@
+/* src/css/Admindraw.css */
+
+/* 페이지 전체 */
+.Admindraw_page {
+    min-height: 100vh;
+    background-color: #f5f5f7;
+    padding: 32px 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+/* 가운데 컨테이너 */
+.Admindraw_container {
+    max-width: 960px;
+    margin: 0 auto;
+    background-color: #ffffff;
+    border-radius: 12px;
+    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.06);
+    padding: 24px 28px 20px;
+    box-sizing: border-box;
+}
+
+/* 헤더 */
+.Admindraw_header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 16px;
+    margin-bottom: 16px;
+}
+
+.Admindraw_title {
+    margin: 0 0 6px;
+    font-size: 22px;
+    font-weight: 700;
+    color: #111827;
+}
+
+.Admindraw_subtitle {
+    margin: 0;
+    font-size: 13px;
+    color: #6b7280;
+    line-height: 1.5;
+}
+
+/* 상단 툴바 */
+.Admindraw_toolbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    margin: 12px 0 16px;
+    flex-wrap: wrap;
+}
+
+/* 상태 필터 버튼 그룹 */
+.Admindraw_filterGroup {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.Admindraw_filterBtn {
+    border-radius: 999px;
+    border: 1px solid #e5e7eb;
+    background-color: #ffffff;
+    padding: 6px 14px;
+    font-size: 12px;
+    cursor: pointer;
+    color: #4b5563;
+    transition: all 0.15s ease-out;
+}
+
+.Admindraw_filterBtn:hover {
+    border-color: #d1d5db;
+    background-color: #f9fafb;
+}
+
+.Admindraw_filterBtn--active {
+    border-color: #2563eb;
+    background-color: #2563eb;
+    color: #ffffff;
+}
+
+/* 페이지당 개수 설정 */
+.Admindraw_pageSize {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    color: #4b5563;
+}
+
+.Admindraw_pageSize select {
+    border-radius: 6px;
+    border: 1px solid #d1d5db;
+    padding: 4px 8px;
+    font-size: 12px;
+    outline: none;
+}
+
+/* 공통 알럿 */
+.Admindraw_alert {
+    border-radius: 8px;
+    padding: 8px 10px;
+    font-size: 13px;
+    margin-bottom: 8px;
+}
+
+.Admindraw_alert--error {
+    background-color: #fef2f2;
+    color: #b91c1c;
+    border: 1px solid #fecaca;
+}
+
+/* 로딩 / 빈상태 */
+.Admindraw_loading,
+.Admindraw_empty {
+    font-size: 13px;
+    color: #6b7280;
+    padding: 16px 4px;
+}
+
+/* 리스트 영역 */
+.Admindraw_list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-top: 4px;
+}
+
+/* 카드 */
+.Admindraw_card {
+    border-radius: 10px;
+    border: 1px solid #e5e7eb;
+    background-color: #ffffff;
+    padding: 12px 14px;
+    box-sizing: border-box;
+    transition: box-shadow 0.15s ease-out, transform 0.1s ease-out;
+}
+
+.Admindraw_card:hover {
+    box-shadow: 0 6px 18px rgba(15, 23, 42, 0.06);
+    transform: translateY(-1px);
+}
+
+/* 카드 헤더 */
+.Admindraw_cardHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 6px;
+}
+
+.Admindraw_userInfo {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.Admindraw_userName {
+    font-size: 14px;
+    font-weight: 600;
+    color: #111827;
+}
+
+.Admindraw_userId {
+    font-size: 11px;
+    color: #9ca3af;
+}
+
+.Admindraw_amount {
+    font-size: 15px;
+    font-weight: 700;
+    color: #111827;
+}
+
+/* 카드 바디 */
+.Admindraw_cardBody {
+    border-top: 1px dashed #e5e7eb;
+    padding-top: 8px;
+    margin-top: 6px;
+}
+
+.Admindraw_line {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 4px;
+    font-size: 12px;
+}
+
+.Admindraw_line--meta {
+    color: #6b7280;
+}
+
+.Admindraw_label {
+    color: #6b7280;
+    flex: 0 0 80px;
+}
+
+.Admindraw_value {
+    text-align: right;
+    flex: 1;
+    color: #111827;
+    word-break: break-all;
+}
+
+/* 카드 푸터 */
+.Admindraw_cardFooter {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 8px;
+}
+
+/* 상태 배지 */
+.Admindraw_statusBadge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    font-weight: 600;
+    padding: 3px 8px;
+    border-radius: 999px;
+}
+
+.Admindraw_statusBadge--pending {
+    background-color: #fef3c7;
+    color: #92400e;
+}
+
+.Admindraw_statusBadge--completed {
+    background-color: #dcfce7;
+    color: #166534;
+}
+
+.Admindraw_statusBadge--rejected {
+    background-color: #fee2e2;
+    color: #b91c1c;
+}
+
+/* 버튼 공통 */
+.Admindraw_btn {
+    border-radius: 999px;
+    border: 1px solid transparent;
+    padding: 6px 12px;
+    font-size: 12px;
+    cursor: pointer;
+    transition: all 0.15s ease-out;
+    background-color: transparent;
+}
+
+.Admindraw_btn:disabled {
+    opacity: 0.5;
+    cursor: default;
+}
+
+/* 버튼 - 주요 */
+.Admindraw_btn--primary {
+    background-color: #2563eb;
+    border-color: #2563eb;
+    color: #ffffff;
+}
+
+.Admindraw_btn--primary:hover:not(:disabled) {
+    background-color: #1d4ed8;
+    border-color: #1d4ed8;
+}
+
+/* 버튼 - ghost */
+.Admindraw_btn--ghost {
+    background-color: #ffffff;
+    border-color: #d1d5db;
+    color: #374151;
+}
+
+.Admindraw_btn--ghost:hover:not(:disabled) {
+    background-color: #f9fafb;
+}
+
+/* 카드 내 액션 버튼 그룹 */
+.Admindraw_actions {
+    display: flex;
+    gap: 6px;
+}
+
+/* 페이지네이션 푸터 */
+.Admindraw_pagination {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 10px;
+    margin-top: 16px;
+    font-size: 13px;
+}
+
+.Admindraw_pageInfo {
+    color: #4b5563;
+}
+
+/* 모달 */
+.Admindraw_modalBackdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(15, 23, 42, 0.45);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 999;
+}
+
+.Admindraw_modal {
+    width: 100%;
+    max-width: 420px;
+    background-color: #ffffff;
+    border-radius: 12px;
+    padding: 18px 18px 14px;
+    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.2);
+    box-sizing: border-box;
+}
+
+.Admindraw_modalTitle {
+    margin: 0 0 6px;
+    font-size: 16px;
+    font-weight: 600;
+    color: #111827;
+}
+
+.Admindraw_modalText {
+    margin: 0 0 10px;
+    font-size: 13px;
+    color: #6b7280;
+}
+
+.Admindraw_modalTextarea {
+    width: 100%;
+    min-height: 70px;
+    padding: 8px 10px;
+    font-size: 13px;
+    border-radius: 8px;
+    border: 1px solid #d1d5db;
+    resize: vertical;
+    box-sizing: border-box;
+    outline: none;
+}
+
+.Admindraw_modalTextarea:focus {
+    border-color: #2563eb;
+    box-shadow: 0 0 0 1px rgba(37, 99, 235, 0.2);
+}
+
+.Admindraw_modalActions {
+    margin-top: 12px;
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+}
+
+/* 간단한 반응형 */
+@media (max-width: 768px) {
+    .Admindraw_container {
+        margin: 0 12px;
+        padding: 18px 16px 14px;
+    }
+
+    .Admindraw_toolbar {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .Admindraw_card {
+        padding: 10px 10px;
+    }
+}
