@@ -64,8 +64,6 @@ function MainPage() {
             <div className="sub-app-shell" style={{ 
                 display: 'flex', 
                 flexDirection: 'column',
-                backgroundColor: '#ffffff',
-                height: '100vh', 
                 paddingTop: '7vh', // 헤더 높이만큼 여백
                 paddingBottom: '10vh', // 바텀네비 높이만큼 여백
                 boxSizing: 'border-box'
