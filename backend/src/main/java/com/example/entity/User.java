@@ -1,10 +1,12 @@
-// src/main/java/com/example/entity/User.java
 package com.example.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
+
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
@@ -31,4 +33,11 @@ public class User {
 
     @UpdateTimestamp
     private LocalDateTime updated_at;
+
+    // [추가됨] 내가 참여 중인 채팅방 목록을 조회하기 위한 양방향 매핑
+    // ChatParticipant의 'user' 필드와 연결됨
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
+    @Builder.Default
+    @ToString.Exclude // 순환 참조 방지
+    private List<ChatParticipant> chatParticipations = new ArrayList<>();
 }
