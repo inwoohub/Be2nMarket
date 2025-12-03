@@ -1,5 +1,5 @@
-import React, {useContext, useEffect, useState} from "react";
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import React, { useEffect, useState } from "react"; // useContext 제거
+import { BrowserRouter as Router, Routes, Route, useNavigate, useLocation } from "react-router-dom";
 import { AuthContext } from "./AuthContext";
 import Layout from "./layouts/Layout";
 import HeaderLayout from "./layouts/HeaderLayout";
@@ -13,9 +13,40 @@ import ChatPage from "./pages/ChatPage";
 import WalletTopupPage from "./pages/WalletTopupPage";
 import PayTopupSuccessPage from "./pages/PayTopupSuccessPage";
 import PayTopupFailPage from "./pages/PayTopupFailPage";
+// 위치 설정 페이지
+import SetLocationPage from "./pages/SetLocationPage";
 
-//css
+// css
 import "./css/App.css";
+
+// 🔹 위치 감시 컴포넌트
+function LocationGuard({ auth }) {
+    const navigate = useNavigate();
+    const location = useLocation();
+
+    useEffect(() => {
+        // [디버깅용] 콘솔에 현재 유저 정보를 찍어봅니다.
+        // F12 -> Console 탭에서 확인해보세요. hasLocation이 true/false로 잘 나오나요?
+        if (auth.user) {
+            console.log("현재 로그인 유저 정보:", auth.user);
+        }
+
+        if (!auth.loading && auth.user && auth.user.auth === "oauth2") {
+            
+            // 주의: 백엔드 SessionController를 수정하지 않았다면 hasLocation이 undefined입니다.
+            // undefined === false는 false이므로 작동하지 않습니다.
+            // 확실하게 체크하기 위해 !auth.user.hasLocation 조건으로 변경합니다.
+            
+            // "위치 정보가 없고(false 혹은 undefined)" AND "현재 설정 페이지가 아니라면"
+            if (!auth.user.hasLocation && location.pathname !== "/set-location") {
+                console.log("위치 정보 없음 감지! 설정 페이지로 이동합니다.");
+                navigate("/set-location");
+            }
+        }
+    }, [auth, navigate, location]);
+
+    return null;
+}
 
 function App() {
 
@@ -23,17 +54,21 @@ function App() {
 
     useEffect(() => {
         fetch("/api/session/me", {
-            credentials: "include", // 세션 쿠키 보내기
+            credentials: "include",
         })
             .then((res) => res.json())
             .then((data) => {
+                // 데이터를 받아왔을 때 로그 확인
+                console.log("서버에서 받은 세션 데이터:", data);
+
                 if (data.auth === "oauth2") {
                     setAuth({ loading: false, user: data });
                 } else {
                     setAuth({ loading: false, user: null });
                 }
             })
-            .catch(() => {
+            .catch((err) => {
+                console.error("세션 체크 실패:", err);
                 setAuth({ loading: false, user: null });
             });
     }, []);
@@ -41,19 +76,20 @@ function App() {
     return (
         <AuthContext.Provider value={auth}>
             <Router>
+                {/* LocationGuard가 실시간으로 위치 설정을 감시합니다 */}
+                <LocationGuard auth={auth} />
+
                 <Routes>
-
-                    {/* 🔹 결제 관련 페이지들: Layout / Header / BottomNav 적용 ❌ */}
-
                     <Route path="/wallet/topup/success" element={<PayTopupSuccessPage />} />
                     <Route path="/wallet/topup/fail" element={<PayTopupFailPage />} />
+
+                    {/* 위치 설정 페이지 */}
+                    <Route path="/set-location" element={<SetLocationPage />} />
 
                     <Route element={<Layout />}>
                         <Route path="/" element={<Index />} />
 
-
-
-                        {/* 메인 페이지: 헤더 + 바텀네브 */}
+                        {/* 메인 페이지 */}
                         <Route
                             element={
                                 <HeaderLayout
@@ -68,7 +104,7 @@ function App() {
                             </Route>
                         </Route>
 
-                        {/* 채팅 페이지: 헤더 + 바텀네브 */}
+                        {/* 채팅 페이지 */}
                         <Route
                             element={
                                 <HeaderLayout
@@ -86,7 +122,7 @@ function App() {
                             </Route>
                         </Route>
 
-                        {/* ⭐ 프로필 페이지: 헤더 + 바텀네브 (여기 따로 설정) */}
+                        {/* 프로필 페이지 */}
                         <Route
                             element={
                                 <HeaderLayout
@@ -104,7 +140,7 @@ function App() {
                             </Route>
                         </Route>
 
-                        {/* ⭐ 충전 페이지: 헤더 + 바텀네브 (여기 따로 설정) */}
+                        {/* 충전 페이지 */}
                         <Route
                             element={
                                 <HeaderLayout
@@ -122,8 +158,6 @@ function App() {
                             </Route>
                         </Route>
 
-
-                        {/* 라우터 구분선 */}
                     </Route>
 
                 </Routes>
