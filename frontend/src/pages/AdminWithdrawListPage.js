@@ -21,8 +21,18 @@ export default function AdminWithdrawListPage() {
     const [rejectReason, setRejectReason] = useState("");
     const [rejectTargetId, setRejectTargetId] = useState(null)
 
+    // 👉 새로 추가: 탭 상태 (LIST = 출금요청 관리, LEDGER = 장부)
+    const [activeTab, setActiveTab] = useState("LIST"); // "LIST" | "LEDGER"
+
+    // 👉 새로 추가: 장부 요약 데이터/로딩/에러
+    const [ledger, setLedger] = useState(null);
+    const [ledgerLoading, setLedgerLoading] = useState(false);
+    const [ledgerError, setLedgerError] = useState("");
+
     // 리스트 조회
     const fetchList = async () => {
+        if (activeTab !== "LIST") return;  // ✅ 다른 탭일 땐 호출 안 함
+
         try {
             setLoading(true);
             setError("");
@@ -38,7 +48,6 @@ export default function AdminWithdrawListPage() {
                 credentials: "include",
             });
 
-            // 권한 관련 처리
             if (!res.ok) {
                 alert("관리자만 접근할 수 있는 페이지입니다.");
                 window.location.href = `/main/${userId}`;
@@ -55,6 +64,35 @@ export default function AdminWithdrawListPage() {
         }
     };
 
+    // 👉 장부 요약 조회
+    const fetchLedger = async () => {
+        if (activeTab !== "LEDGER") return;
+
+        try {
+            setLedgerLoading(true);
+            setLedgerError("");
+
+            const res = await fetch("/api/admin/withdraw-requests/ledger-summary", {
+                credentials: "include",
+            });
+
+            if (!res.ok) {
+                alert("관리자만 접근할 수 있는 페이지입니다.");
+                window.location.href = `/main/${userId}`;
+                return;
+            }
+
+            const json = await res.json();
+            setLedger(json);
+        } catch (err) {
+            console.error("장부 요약 조회 에러", err);
+            setLedgerError(err.message || "장부 요약 조회 중 오류가 발생했습니다.");
+        } finally {
+            setLedgerLoading(false);
+        }
+    };
+
+
     // userId 로딩
     useEffect(() => {
         if (auth.loading) return;
@@ -63,8 +101,14 @@ export default function AdminWithdrawListPage() {
             window.location.href = "/";
             return;
         }
-        fetchList();
-    }, [auth, status, page, size]);
+
+        if (activeTab === "LIST") {
+            fetchList();
+        } else if (activeTab === "LEDGER") {
+            fetchLedger();
+        }
+    }, [auth, activeTab, status, page, size]);
+
 
     // 승인 처리
     const handleApprove = async (id) => {
@@ -170,10 +214,35 @@ export default function AdminWithdrawListPage() {
         return bank ? bank.name : bankCode; // 못 찾으면 코드 그대로
     }
 
+    const contentList = data?.content ?? [];
+    const displayList =
+        status === "PENDING"
+            ? contentList
+            : [...contentList].reverse();
+
 
     return (
         <div className="Admindraw_page">
             <div className="Admindraw_container">
+
+                {/* 탭 바 */}
+                <div className="Admindraw_tabBar">
+                    <button
+                        type="button"
+                        className={`Admindraw_tab ${activeTab === "LIST" ? "Admindraw_tab--active" : ""}`}
+                        onClick={() => setActiveTab("LIST")}
+                    >
+                        출금 요청 관리
+                    </button>
+                    <button
+                        type="button"
+                        className={`Admindraw_tab ${activeTab === "LEDGER" ? "Admindraw_tab--active" : ""}`}
+                        onClick={() => setActiveTab("LEDGER")}
+                    >
+                        장부
+                    </button>
+                </div>
+
                 {/* 헤더 */}
                 <header className="Admindraw_header">
                     <div>
@@ -186,214 +255,287 @@ export default function AdminWithdrawListPage() {
                     </div>
                 </header>
 
-                {/* 필터/옵션 영역 */}
-                <section className="Admindraw_toolbar">
-                    <div className="Admindraw_filterGroup">
-                        <button
-                            type="button"
-                            className={`Admindraw_filterBtn ${status === "PENDING" ? "Admindraw_filterBtn--active" : ""}`}
-                            onClick={() => handleChangeStatus("PENDING")}
-                        >
-                            대기중
-                        </button>
-                        <button
-                            type="button"
-                            className={`Admindraw_filterBtn ${status === "COMPLETED" ? "Admindraw_filterBtn--active" : ""}`}
-                            onClick={() => handleChangeStatus("COMPLETED")}
-                        >
-                            완료
-                        </button>
-                        <button
-                            type="button"
-                            className={`Admindraw_filterBtn ${status === "REJECTED" ? "Admindraw_filterBtn--active" : ""}`}
-                            onClick={() => handleChangeStatus("REJECTED")}
-                        >
-                            거절
-                        </button>
-                        <button
-                            type="button"
-                            className={`Admindraw_filterBtn ${status === "ALL" ? "Admindraw_filterBtn--active" : ""}`}
-                            onClick={() => handleChangeStatus("ALL")}
-                        >
-                            전체
-                        </button>
-                    </div>
+                {activeTab === "LIST" && (
+                    <>
+                        {/* 필터/옵션 영역 */}
+                        <section className="Admindraw_toolbar">
+                            <div className="Admindraw_filterGroup">
+                                <button
+                                    type="button"
+                                    className={`Admindraw_filterBtn ${status === "PENDING" ? "Admindraw_filterBtn--active" : ""}`}
+                                    onClick={() => handleChangeStatus("PENDING")}
+                                >
+                                    대기중
+                                </button>
+                                <button
+                                    type="button"
+                                    className={`Admindraw_filterBtn ${status === "COMPLETED" ? "Admindraw_filterBtn--active" : ""}`}
+                                    onClick={() => handleChangeStatus("COMPLETED")}
+                                >
+                                    완료
+                                </button>
+                                <button
+                                    type="button"
+                                    className={`Admindraw_filterBtn ${status === "REJECTED" ? "Admindraw_filterBtn--active" : ""}`}
+                                    onClick={() => handleChangeStatus("REJECTED")}
+                                >
+                                    거절
+                                </button>
+                                <button
+                                    type="button"
+                                    className={`Admindraw_filterBtn ${status === "ALL" ? "Admindraw_filterBtn--active" : ""}`}
+                                    onClick={() => handleChangeStatus("ALL")}
+                                >
+                                    전체
+                                </button>
+                            </div>
 
-                    <div className="Admindraw_pageSize">
-                        <span>페이지당 개수</span>
-                        <select
-                            value={size}
-                            onChange={(e) => {
-                                setSize(Number(e.target.value));
-                                setPage(0);
-                            }}
-                        >
-                            <option value={5}>5</option>
-                            <option value={10}>10</option>
-                            <option value={20}>20</option>
-                        </select>
-                    </div>
-                </section>
+                            <div className="Admindraw_pageSize">
+                                <span>페이지당 개수</span>
+                                <select
+                                    value={size}
+                                    onChange={(e) => {
+                                        setSize(Number(e.target.value));
+                                        setPage(0);
+                                    }}
+                                >
+                                    <option value={5}>5</option>
+                                    <option value={10}>10</option>
+                                    <option value={20}>20</option>
+                                </select>
+                            </div>
+                        </section>
 
-                {/* 에러 */}
-                {error && (
-                    <div className="Admindraw_alert Admindraw_alert--error">
-                        {error}
-                    </div>
-                )}
+                        {/* 에러 */}
+                        {error && (
+                            <div className="Admindraw_alert Admindraw_alert--error">
+                                {error}
+                            </div>
+                        )}
 
-                {/* 로딩 */}
-                {loading && (
-                    <div className="Admindraw_loading">
-                        목록을 불러오는 중입니다...
-                    </div>
-                )}
+                        {/* 로딩 */}
+                        {loading && (
+                            <div className="Admindraw_loading">
+                                목록을 불러오는 중입니다...
+                            </div>
+                        )}
 
-                {/* 리스트 */}
-                {!loading && data && data.content && data.content.length === 0 && (
-                    <div className="Admindraw_empty">
-                        해당 상태의 출금 요청이 없습니다.
-                    </div>
-                )}
+                        {/* 리스트 */}
+                        {!loading && data && data.content && data.content.length === 0 && (
+                            <div className="Admindraw_empty">
+                                해당 상태의 출금 요청이 없습니다.
+                            </div>
+                        )}
 
-                {!loading && data && data.content && data.content.length > 0 && (
-                    <section className="Admindraw_list">
-                        {data.content.map((item) => {
-                            const {
-                                id,
-                                amount,
-                                status: itemStatus,
-                                userId,
-                                userNickname,
-                                bankCode,
-                                accountNumber,
-                                accountHolder,
-                                requestedAt,
-                                completedAt,
-                                rejectedAt,
-                                rejectReason: itemRejectReason,
-                            } = item;
+                        {!loading && data && data.content && data.content.length > 0 && (
+                            <section className="Admindraw_list">
+                                {displayList.map((item) => {
+                                    const {
+                                        id,
+                                        amount,
+                                        status: itemStatus,
+                                        userId,
+                                        userNickname,
+                                        bankCode,
+                                        accountNumber,
+                                        accountHolder,
+                                        requestedAt,
+                                        completedAt,
+                                        rejectedAt,
+                                        rejectReason: itemRejectReason,
+                                    } = item;
 
-                            return (
-                                <article key={id} className="Admindraw_card">
-                                    <div className="Admindraw_cardHeader">
-                                        <div className="Admindraw_userInfo">
-                                            <span className="Admindraw_userName">
-                                                {userNickname || `USER#${userId}`}
-                                            </span>
-                                            <span className="Admindraw_userId">
-                                                ID: {userId}
-                                            </span>
-                                        </div>
-                                        <div className="Admindraw_amount">
-                                            {amount?.toLocaleString()}원
-                                        </div>
-                                    </div>
-
-                                    <div className="Admindraw_cardBody">
-                                        <div className="Admindraw_line">
-                                            <span className="Admindraw_label">은행</span>
-                                            <span className="Admindraw_value">
-                                                {getBankName(bankCode)} ({bankCode})
-                                            </span>
-                                        </div>
-
-                                        <div className="Admindraw_line">
-                                            <span className="Admindraw_label">계좌번호</span>
-                                            <span className="Admindraw_value">{accountNumber}</span>
-                                        </div>
-                                        <div className="Admindraw_line">
-                                            <span className="Admindraw_label">예금주</span>
-                                            <span className="Admindraw_value">{accountHolder}</span>
-                                        </div>
-
-                                        <div className="Admindraw_line Admindraw_line--meta">
-                                            <span className="Admindraw_label">요청 시각</span>
-                                            <span className="Admindraw_value">{requestedAt || "-"}</span>
-                                        </div>
-
-                                        {itemStatus === "COMPLETED" && (
-                                            <div className="Admindraw_line Admindraw_line--meta">
-                                                <span className="Admindraw_label">완료 시각</span>
-                                                <span className="Admindraw_value">{completedAt || "-"}</span>
-                                            </div>
-                                        )}
-
-                                        {itemStatus === "REJECTED" && (
-                                            <>
-                                                <div className="Admindraw_line Admindraw_line--meta">
-                                                    <span className="Admindraw_label">거절 시각</span>
-                                                    <span className="Admindraw_value">{rejectedAt || "-"}</span>
-                                                </div>
-                                                <div className="Admindraw_line Admindraw_line--meta">
-                                                    <span className="Admindraw_label">거절 사유</span>
-                                                    <span className="Admindraw_value">
-                                                        {itemRejectReason || "-"}
+                                    return (
+                                        <article key={id} className="Admindraw_card">
+                                            <div className="Admindraw_cardHeader">
+                                                <div className="Admindraw_userInfo">
+                                                    <span className="Admindraw_userName">
+                                                        {userNickname || `USER#${userId}`}
+                                                    </span>
+                                                    <span className="Admindraw_userId">
+                                                        ID: {userId}
                                                     </span>
                                                 </div>
-                                            </>
-                                        )}
-                                    </div>
-
-                                    <div className="Admindraw_cardFooter">
-                                        <span
-                                            className={`Admindraw_statusBadge Admindraw_statusBadge--${itemStatus.toLowerCase()}`}
-                                        >
-                                            {itemStatus}
-                                        </span>
-
-                                        {itemStatus === "PENDING" && (
-                                            <div className="Admindraw_actions">
-                                                <button
-                                                    type="button"
-                                                    className="Admindraw_btn Admindraw_btn--primary"
-                                                    onClick={() => handleApprove(id)}
-                                                >
-                                                    승인
-                                                </button>
-                                                <button
-                                                    type="button"
-                                                    className="Admindraw_btn Admindraw_btn--ghost"
-                                                    onClick={() => openRejectModal(id)}
-                                                >
-                                                    거절
-                                                </button>
+                                                <div className="Admindraw_amount">
+                                                    {amount?.toLocaleString()}원
+                                                </div>
                                             </div>
-                                        )}
+
+                                            <div className="Admindraw_cardBody">
+                                                <div className="Admindraw_line">
+                                                    <span className="Admindraw_label">은행</span>
+                                                    <span className="Admindraw_value">
+                                                        {getBankName(bankCode)} ({bankCode})
+                                                    </span>
+                                                </div>
+
+                                                <div className="Admindraw_line">
+                                                    <span className="Admindraw_label">계좌번호</span>
+                                                    <span className="Admindraw_value">{accountNumber}</span>
+                                                </div>
+                                                <div className="Admindraw_line">
+                                                    <span className="Admindraw_label">예금주</span>
+                                                    <span className="Admindraw_value">{accountHolder}</span>
+                                                </div>
+
+                                                <div className="Admindraw_line Admindraw_line--meta">
+                                                    <span className="Admindraw_label">요청 시각</span>
+                                                    <span className="Admindraw_value">{requestedAt || "-"}</span>
+                                                </div>
+
+                                                {itemStatus === "COMPLETED" && (
+                                                    <div className="Admindraw_line Admindraw_line--meta">
+                                                        <span className="Admindraw_label">완료 시각</span>
+                                                        <span className="Admindraw_value">{completedAt || "-"}</span>
+                                                    </div>
+                                                )}
+
+                                                {itemStatus === "REJECTED" && (
+                                                    <>
+                                                        <div className="Admindraw_line Admindraw_line--meta">
+                                                            <span className="Admindraw_label">거절 시각</span>
+                                                            <span className="Admindraw_value">{rejectedAt || "-"}</span>
+                                                        </div>
+                                                        <div className="Admindraw_line Admindraw_line--meta">
+                                                            <span className="Admindraw_label">거절 사유</span>
+                                                            <span className="Admindraw_value">
+                                                                {itemRejectReason || "-"}
+                                                            </span>
+                                                        </div>
+                                                    </>
+                                                )}
+                                            </div>
+
+                                            <div className="Admindraw_cardFooter">
+                                                <span
+                                                    className={`Admindraw_statusBadge Admindraw_statusBadge--${itemStatus.toLowerCase()}`}
+                                                >
+                                                    {itemStatus}
+                                                </span>
+
+                                                {itemStatus === "PENDING" && (
+                                                    <div className="Admindraw_actions">
+                                                        <button
+                                                            type="button"
+                                                            className="Admindraw_btn Admindraw_btn--primary"
+                                                            onClick={() => handleApprove(id)}
+                                                        >
+                                                            승인
+                                                        </button>
+                                                        <button
+                                                            type="button"
+                                                            className="Admindraw_btn Admindraw_btn--ghost"
+                                                            onClick={() => openRejectModal(id)}
+                                                        >
+                                                            거절
+                                                        </button>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </article>
+                                    );
+                                })}
+                            </section>
+                        )}
+
+                        {/* 페이지네이션 */}
+                        {data && totalPages > 1 && (
+                            <footer className="Admindraw_pagination">
+                                <button
+                                    type="button"
+                                    className="Admindraw_btn Admindraw_btn--ghost"
+                                    disabled={page === 0}
+                                    onClick={() => setPage((p) => Math.max(p - 1, 0))}
+                                >
+                                    이전
+                                </button>
+                                <span className="Admindraw_pageInfo">
+                                    {page + 1} / {totalPages}
+                                </span>
+                                <button
+                                    type="button"
+                                    className="Admindraw_btn Admindraw_btn--ghost"
+                                    disabled={page + 1 >= totalPages}
+                                    onClick={() =>
+                                        setPage((p) => (p + 1 < totalPages ? p + 1 : p))
+                                    }
+                                >
+                                    다음
+                                </button>
+                            </footer>
+                        )}
+                    </>
+                )}
+                {activeTab === "LEDGER" && (
+                    <section className="Admindraw_ledger">
+                        {ledgerError && (
+                            <div className="Admindraw_alert Admindraw_alert--error">
+                                {ledgerError}
+                            </div>
+                        )}
+
+                        {ledgerLoading && (
+                            <div className="Admindraw_loading">
+                                장부 요약을 불러오는 중입니다...
+                            </div>
+                        )}
+
+                        {!ledgerLoading && ledger && (
+                            <>
+                                <div className="Admindraw_ledgerMeta">
+                                    <span>기준 시각: {ledger.generatedAt}</span>
+                                </div>
+
+                                <div className="Admindraw_ledgerGrid">
+                                    <div className="Admindraw_ledgerCard">
+                                        <h3>총 충전액</h3>
+                                        <p>{ledger.totalTopupAmount.toLocaleString()} 원</p>
+                                        <span>{ledger.totalTopupCount} 건</span>
                                     </div>
-                                </article>
-                            );
-                        })}
+
+                                    <div className="Admindraw_ledgerCard">
+                                        <h3>출금 완료</h3>
+                                        <p>{ledger.totalWithdrawCompletedAmount.toLocaleString()} 원</p>
+                                        <span>{ledger.totalWithdrawCompletedCount} 건</span>
+                                    </div>
+
+                                    <div className="Admindraw_ledgerCard">
+                                        <h3>출금 대기</h3>
+                                        <p>{ledger.totalWithdrawPendingAmount.toLocaleString()} 원</p>
+                                        <span>{ledger.totalWithdrawPendingCount} 건</span>
+                                    </div>
+
+                                    <div className="Admindraw_ledgerCard">
+                                        <h3>유저 잔액 총합</h3>
+                                        <p>{ledger.totalUserBalance.toLocaleString()} 원</p>
+                                    </div>
+
+                                    <div
+                                        className={
+                                            "Admindraw_ledgerCard " +
+                                            (ledger.diff === 0
+                                                ? "Admindraw_ledgerCard--ok"
+                                                : "Admindraw_ledgerCard--warn")
+                                        }
+                                    >
+                                        <h3>검증 결과</h3>
+                                        <p>
+                                            총 충전액 - (유저 잔액 + 출금 완료액) ={" "}
+                                            {ledger.diff.toLocaleString()} 원
+                                        </p>
+                                        <span>
+                                            {ledger.diff === 0
+                                                ? "✅ 장부가 일치합니다."
+                                                : "⚠️ 장부에 차이가 있습니다. 로그 확인이 필요합니다."}
+                                        </span>
+                                    </div>
+                                </div>
+                            </>
+                        )}
                     </section>
                 )}
-
-                {/* 페이지네이션 */}
-                {data && totalPages > 1 && (
-                    <footer className="Admindraw_pagination">
-                        <button
-                            type="button"
-                            className="Admindraw_btn Admindraw_btn--ghost"
-                            disabled={page === 0}
-                            onClick={() => setPage((p) => Math.max(p - 1, 0))}
-                        >
-                            이전
-                        </button>
-                        <span className="Admindraw_pageInfo">
-                            {page + 1} / {totalPages}
-                        </span>
-                        <button
-                            type="button"
-                            className="Admindraw_btn Admindraw_btn--ghost"
-                            disabled={page + 1 >= totalPages}
-                            onClick={() =>
-                                setPage((p) => (p + 1 < totalPages ? p + 1 : p))
-                            }
-                        >
-                            다음
-                        </button>
-                    </footer>
-                )}
             </div>
+
 
             {/* 거절 모달 */}
             {rejectModalOpen && (

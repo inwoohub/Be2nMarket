@@ -1,6 +1,7 @@
 // src/test/java/com/example/service/WithdrawAdminServiceTest.java
 package com.example.service;
 
+import com.example.dto.WalletLedgerDto;
 import com.example.dto.WithdrawRequestDto;
 import com.example.entity.User;
 import com.example.entity.Wallet;
@@ -12,6 +13,7 @@ import com.example.repository.UserRepository;
 import com.example.repository.WalletLedgerRepository;
 import com.example.repository.WalletRepository;
 import com.example.repository.WithdrawRequestRepository;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.*;
@@ -160,5 +162,64 @@ class WithdrawAdminServiceTest {
         assertThat(savedLedger.getEntry_type()).isEqualTo(LedgerEntryType.WITHDRAW_REJECT);
         assertThat(savedLedger.getAmount()).isEqualTo(5_000L);
         assertThat(savedLedger.getBalance_after()).isEqualTo(10_000L);
+    }
+
+
+    User admin;
+
+    @BeforeEach
+    void setUp() {
+        admin = new User();
+        admin.setUser_id(1L);
+        admin.setRole("admin");
+    }
+
+    @Test
+    void getLedgerSummary_정상_계산() {
+
+        // given
+        Long adminId = 1L;
+
+
+        when(userRepository.findById(adminId))
+                .thenReturn(java.util.Optional.of(admin));
+
+        // 총 충전액: 30000
+        when(walletLedgerRepository.sumAmountByEntryTypes(
+                List.of(LedgerEntryType.TOPUP_CARD, LedgerEntryType.TOPUP_ACCOUNT)
+        )).thenReturn(30_000L);
+
+        // 충전 건수: 3건
+        when(walletLedgerRepository.countByEntryTypes(
+                List.of(LedgerEntryType.TOPUP_CARD, LedgerEntryType.TOPUP_ACCOUNT)
+        )).thenReturn(3L);
+
+        // 출금 완료 합계: 10000
+        when(withdrawRequestRepository.sumAmountByStatus(WithdrawStatus.COMPLETED))
+                .thenReturn(10_000L);
+        when(withdrawRequestRepository.countByStatus(WithdrawStatus.COMPLETED))
+                .thenReturn(2L);
+
+        // 출금 대기 합계: 5000
+        when(withdrawRequestRepository.sumAmountByStatus(WithdrawStatus.PENDING))
+                .thenReturn(5_000L);
+        when(withdrawRequestRepository.countByStatus(WithdrawStatus.PENDING))
+                .thenReturn(1L);
+
+        // 전체 유저 잔액 합: 20000
+        when(walletRepository.sumAllBalance())
+                .thenReturn(20_000L);
+
+        // when
+        WalletLedgerDto dto = withdrawAdminService.getLedgerSummary(adminId);
+
+        // then
+        assertThat(dto.totalTopupAmount()).isEqualTo(30_000L);
+        assertThat(dto.totalUserBalance()).isEqualTo(20_000L);
+        assertThat(dto.totalWithdrawCompletedAmount()).isEqualTo(10_000L);
+        assertThat(dto.diff()).isEqualTo(0L); // 30000 - (20000 + 10000)
+
+        // 관리자 검증 메소드가 실제로 불렸는지도 체크
+        verify(userRepository).findById(adminId);
     }
 }
