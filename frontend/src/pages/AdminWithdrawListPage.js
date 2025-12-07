@@ -72,7 +72,7 @@ export default function AdminWithdrawListPage() {
             setLedgerLoading(true);
             setLedgerError("");
 
-            const res = await fetch("/api/admin/withdraw-requests/ledger-summary", {
+            const res = await fetch("/api/admin/withdraw-requests/ledger", {
                 credentials: "include",
             });
 
@@ -487,6 +487,24 @@ export default function AdminWithdrawListPage() {
                                 </div>
 
                                 <div className="Admindraw_ledgerGrid">
+                                    <div
+                                        className={
+                                            "Admindraw_ledgerCard " +
+                                            (ledger.diff === 0
+                                                ? "Admindraw_ledgerCard--ok"
+                                                : "Admindraw_ledgerCard--warn")
+                                        }
+                                    >
+                                        <h3>검증 결과 (차이 금액)</h3>
+                                        <p>
+                                            {ledger.diff.toLocaleString()} 원
+                                        </p>
+                                        <span>
+                                            {ledger.diff === 0
+                                                ? "✅ 장부가 일치합니다."
+                                                : "⚠️ 장부에 차이가 있습니다. 로그 확인이 필요합니다."}
+                                        </span>
+                                    </div>
                                     <div className="Admindraw_ledgerCard">
                                         <h3>총 충전액</h3>
                                         <p>{ledger.totalTopupAmount.toLocaleString()} 원</p>
@@ -510,25 +528,7 @@ export default function AdminWithdrawListPage() {
                                         <p>{ledger.totalUserBalance.toLocaleString()} 원</p>
                                     </div>
 
-                                    <div
-                                        className={
-                                            "Admindraw_ledgerCard " +
-                                            (ledger.diff === 0
-                                                ? "Admindraw_ledgerCard--ok"
-                                                : "Admindraw_ledgerCard--warn")
-                                        }
-                                    >
-                                        <h3>검증 결과</h3>
-                                        <p>
-                                            총 충전액 - (유저 잔액 + 출금 완료액) ={" "}
-                                            {ledger.diff.toLocaleString()} 원
-                                        </p>
-                                        <span>
-                                            {ledger.diff === 0
-                                                ? "✅ 장부가 일치합니다."
-                                                : "⚠️ 장부에 차이가 있습니다. 로그 확인이 필요합니다."}
-                                        </span>
-                                    </div>
+
                                 </div>
                             </>
                         )}

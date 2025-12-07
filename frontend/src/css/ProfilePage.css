@@ -469,3 +469,23 @@
 .profilepage_clear_btn:hover {
     text-decoration: underline;
 }
+
+.profilpage_admin_section{
+    margin-bottom: 20vh;
+}
+
+
+.profilepage_admin_btn {
+    padding: 10px 18px;
+    border-radius: 8px;
+    border: none;
+    background-color: #ffa324;
+    color: #fff;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.profilepage_admin_btn:hover {
+    opacity: 0.9;
+}

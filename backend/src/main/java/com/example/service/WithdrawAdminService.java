@@ -132,11 +132,11 @@ public class WithdrawAdminService {
         long totalWithdrawPendingCount =
                 withdrawRequestRepository.countByStatus(WithdrawStatus.PENDING);
 
-        // 🔹 유저 잔액 합
+        // 유저 잔액 합
         long totalUserBalance = walletRepository.sumAllBalance();
 
-        // 🔹 장부 검증: 총 충전액 = 유저 잔액 + 완료된 출금액
-        long diff = totalTopupAmount - (totalUserBalance + totalWithdrawCompletedAmount);
+        // 장부 검증: 총 충전액 = 유저 잔액 + 완료된 출금액 + 출금 대기 금액
+        long diff = totalTopupAmount - (totalUserBalance + totalWithdrawCompletedAmount+totalWithdrawPendingAmount);
 
         return WalletLedgerDto.builder()
                 .totalTopupAmount(totalTopupAmount)

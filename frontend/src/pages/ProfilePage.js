@@ -28,8 +28,9 @@ function ProfilePage() {
             .then((res) => res.json())
             .then((data) => {
                 if (data.auth === "oauth2" && data.user) {
-                    setProfile(data.user);
+                    setProfile(data.user,);
                     setEditNickname(data.user.nickname || "");
+
                 }
                 setLoading(false);
             })
@@ -191,6 +192,7 @@ function ProfilePage() {
             : 36.5;
 
     const reviews = "10";
+    const isAdmin = profile?.role === "admin";
 
 
     const userId = profile?.userId;
@@ -387,6 +389,20 @@ function ProfilePage() {
                         </div>
 
                         <div className="review_bottom_magrin"></div>
+
+                        {/*✅ 관리자용 버튼: admin만 보이도록 */}
+                        {isAdmin && (
+                            <div className="profilpage_admin_section">
+                                <a
+                                    href="/admin/withdraw-requests"
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="profilepage_admin_btn"
+                                >
+                                    출금 관리 (관리자 페이지)
+                                </a>
+                            </div>
+                        )}
                     </div>
 
                 </div>

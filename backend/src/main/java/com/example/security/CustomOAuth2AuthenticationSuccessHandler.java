@@ -28,6 +28,7 @@ public class CustomOAuth2AuthenticationSuccessHandler implements AuthenticationS
 
         Long kakaoId = null;
         String nickname = "사용자";
+        String role = null;
 
         // 1) Principal 에서 카카오 id / 닉네임 추출
         if (authentication instanceof OAuth2AuthenticationToken token) {
@@ -35,7 +36,7 @@ public class CustomOAuth2AuthenticationSuccessHandler implements AuthenticationS
             Map<String, Object> attrs = principal.getAttributes();
 
             kakaoId = Long.valueOf(String.valueOf(attrs.get("id")));
-
+            role = String.valueOf(attrs.get("role"));
             nickname = "사용자";
             Object ka = attrs.get("kakao_account");
             if (ka instanceof Map<?, ?> kaMap) {
@@ -49,7 +50,7 @@ public class CustomOAuth2AuthenticationSuccessHandler implements AuthenticationS
             }
 
             // 2) 세션에 보관
-            request.getSession(true).setAttribute("USER", new SessionUser(kakaoId, nickname));
+            request.getSession(true).setAttribute("USER", new SessionUser(kakaoId, nickname, role));
         }
 
         if (kakaoId != null) {
