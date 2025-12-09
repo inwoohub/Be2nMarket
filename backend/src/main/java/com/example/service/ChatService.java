@@ -1,13 +1,11 @@
 package com.example.service;
 
 import com.example.dto.ChatMessageDto;
+import com.example.dto.ChatRoomDetailDto;
 import com.example.dto.ChatRoomListDto;
 import com.example.entity.*;
 import com.example.entity.embeddable.ChatParticipantId;
-import com.example.repository.ChatMessageRepository;
-import com.example.repository.ChatParticipantRepository;
-import com.example.repository.ChatRoomRepository;
-import com.example.repository.UserRepository;
+import com.example.repository.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -28,44 +26,54 @@ public class ChatService {
     private final ChatRoomRepository chatRoomRepository;
     private final UserRepository userRepository;
     private final ChatParticipantRepository chatParticipantRepository;
-
-    // ... (기존 saveMessage, getMessages 등은 그대로 유지) ...
-    // 편의상 기존 코드는 생략하고 새로 추가되는 메서드만 강조하겠습니다.
-    // 실제 파일에는 기존 메서드들도 다 있어야 합니다.
+    private final PostRepository postRepository;
 
     @Transactional
     public ChatMessageDto saveMessage(ChatMessageDto messageDto) {
-        // (기존 코드 유지)
         ChatRoom chatRoom = chatRoomRepository.findById(messageDto.getChatroomId())
                 .orElseThrow(() -> new RuntimeException("채팅방을 찾을 수 없습니다."));
         User sender = userRepository.findById(messageDto.getSenderId())
                 .orElseThrow(() -> new RuntimeException("사용자를 찾을 수 없습니다."));
-        ChatMessage chatMessage = ChatMessage.builder().chatroom(chatRoom).sender(sender).content(messageDto.getContent()).build();
+
+        ChatMessage chatMessage = ChatMessage.builder()
+                .chatroom(chatRoom)
+                .sender(sender)
+                .content(messageDto.getContent())
+                .build();
+
         ChatMessage savedMessage = chatMessageRepository.save(chatMessage);
+
+        messageDto.setSenderNickname(sender.getNickname());
+        messageDto.setSenderProfileImage(sender.getProfile_image_url());
+
         if (savedMessage.getCreated_at() != null) messageDto.setCreatedAt(savedMessage.getCreated_at().toString());
         else messageDto.setCreatedAt(LocalDateTime.now().toString());
+
         return messageDto;
     }
 
     public List<ChatMessageDto> getMessages(Long chatroomId) {
-        // (기존 코드 유지)
         List<ChatMessage> messages = chatMessageRepository.findByChatroom_ChatroomIdOrderByCreatedAtAsc(chatroomId);
         List<ChatMessageDto> messageDtos = new ArrayList<>();
+
         for (ChatMessage msg : messages) {
             ChatMessageDto dto = new ChatMessageDto();
             dto.setChatroomId(msg.getChatroom().getChatroom_id());
             dto.setSenderId(msg.getSender().getUser_id());
             dto.setContent(msg.getContent());
             dto.setCreatedAt(msg.getCreated_at() != null ? msg.getCreated_at().toString() : LocalDateTime.now().toString());
+            dto.setSenderNickname(msg.getSender().getNickname());
+            dto.setSenderProfileImage(msg.getSender().getProfile_image_url());
             messageDtos.add(dto);
         }
         return messageDtos;
     }
 
+    // [수정됨] 채팅방 목록 조회 (게시글 정보 포함)
     public List<ChatRoomListDto> getChatRoomList(Long userId) {
-        // (기존 코드 유지)
         List<ChatParticipant> myParticipations = chatParticipantRepository.findAllByUserId(userId);
         List<ChatRoomListDto> chatRoomList = new ArrayList<>();
+
         for (ChatParticipant myParticipant : myParticipations) {
             ChatRoom chatRoom = myParticipant.getChatroom();
             User otherUser = null;
@@ -76,15 +84,28 @@ public class ChatService {
                 }
             }
             if (otherUser == null) continue;
+
             List<ChatMessage> messages = chatMessageRepository.findLatestMessages(chatRoom.getChatroom_id());
             ChatMessage lastMessage = messages.isEmpty() ? null : messages.get(0);
+
+            // 게시글 정보 가져오기
+            Post post = chatRoom.getPost();
+            String postTitle = (post != null) ? post.getTitle() : "알 수 없는 게시글";
+            String postImage = null;
+            if (post != null && !post.getImages().isEmpty()) {
+                postImage = post.getImages().get(0).getUrl();
+            }
+
             ChatRoomListDto dto = ChatRoomListDto.builder()
                     .chatroomId(chatRoom.getChatroom_id())
                     .otherUserId(otherUser.getUser_id())
                     .otherUserNickname(otherUser.getNickname())
                     .otherUserProfileImage(otherUser.getProfile_image_url())
+                    .postTitle(postTitle) // [추가]
+                    .postImage(postImage) // [추가]
                     .unreadCount(myParticipant.getUnread_count())
                     .build();
+
             if (lastMessage != null) {
                 dto.setLastMessage(lastMessage.getContent());
                 dto.setLastMessageTime(lastMessage.getCreated_at());
@@ -105,28 +126,23 @@ public class ChatService {
         return chatRoomList;
     }
 
-    /**
-     * [추가됨] 4. 채팅방 생성 또는 조회
-     * - 구매자(myId)와 판매자(sellerId) 사이의 방이 있으면 그 ID를 반환.
-     * - 없으면 새로 만들어서 ID 반환.
-     */
     @Transactional
-    public Long createOrFindChatRoom(Long myId, Long sellerId) {
+    public Long createOrFindChatRoom(Long myId, Long sellerId, Long postId) {
         if (myId.equals(sellerId)) {
             throw new IllegalArgumentException("자기 자신과는 채팅할 수 없습니다.");
         }
-
-        // 1. 기존 방이 있는지 확인
-        Optional<ChatRoom> existingRoom = chatRoomRepository.findChatRoomByUsers(myId, sellerId);
+        Optional<ChatRoom> existingRoom = chatRoomRepository.findByPostIdAndUserId(postId, myId);
         if (existingRoom.isPresent()) {
             return existingRoom.get().getChatroom_id();
         }
 
-        // 2. 없으면 새 방 생성
-        ChatRoom newRoom = new ChatRoom(); // created_at은 @CreationTimestamp로 자동 생성
+        Post post = postRepository.findById(postId)
+                .orElseThrow(() -> new IllegalArgumentException("게시글을 찾을 수 없습니다."));
+
+        ChatRoom newRoom = new ChatRoom();
+        newRoom.setPost(post);
         chatRoomRepository.save(newRoom);
 
-        // 3. 참여자 정보(나) 생성 및 저장
         User me = userRepository.findById(myId).orElseThrow(() -> new IllegalArgumentException("내 유저 정보 없음"));
         ChatParticipant participant1 = ChatParticipant.builder()
                 .id(new ChatParticipantId(newRoom.getChatroom_id(), myId))
@@ -135,7 +151,6 @@ public class ChatService {
                 .build();
         chatParticipantRepository.save(participant1);
 
-        // 4. 참여자 정보(상대방) 생성 및 저장
         User seller = userRepository.findById(sellerId).orElseThrow(() -> new IllegalArgumentException("판매자 유저 정보 없음"));
         ChatParticipant participant2 = ChatParticipant.builder()
                 .id(new ChatParticipantId(newRoom.getChatroom_id(), sellerId))
@@ -145,5 +160,42 @@ public class ChatService {
         chatParticipantRepository.save(participant2);
 
         return newRoom.getChatroom_id();
+    }
+
+    public ChatRoomDetailDto getChatRoomDetail(Long chatroomId, Long myId) {
+        ChatRoom chatRoom = chatRoomRepository.findById(chatroomId)
+                .orElseThrow(() -> new IllegalArgumentException("채팅방이 존재하지 않습니다."));
+
+        User otherUser = null;
+        for (ChatParticipant p : chatRoom.getParticipants()) {
+            if (!p.getUser().getUser_id().equals(myId)) {
+                otherUser = p.getUser();
+                break;
+            }
+        }
+
+        if (otherUser == null) {
+            return ChatRoomDetailDto.builder()
+                    .chatroomId(chatroomId)
+                    .postTitle("대화 상대 없음")
+                    .build();
+        }
+
+        Post post = chatRoom.getPost();
+        String postImage = null;
+        if (post != null && post.getImages() != null && !post.getImages().isEmpty()) {
+            postImage = post.getImages().get(0).getUrl();
+        }
+
+        return ChatRoomDetailDto.builder()
+                .chatroomId(chatroomId)
+                .otherUserId(otherUser.getUser_id())
+                .otherUserNickname(otherUser.getNickname())
+                .postId(post != null ? post.getPost_id() : null)
+                .postTitle(post != null ? post.getTitle() : "게시글 정보 없음")
+                .postPrice(post != null ? post.getPrice() : 0L)
+                .postStatus(post != null ? post.getStatus().name() : "")
+                .postImage(postImage)
+                .build();
     }
 }
