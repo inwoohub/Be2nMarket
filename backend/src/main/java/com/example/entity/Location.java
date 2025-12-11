@@ -9,7 +9,7 @@ import java.math.BigDecimal;
 public class Location {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    // @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long location_id;
 
     @Column(nullable = false, length = 100)
