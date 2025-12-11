@@ -1,10 +1,10 @@
-import React, { useState, useEffect } from 'react';
-// useNavigate 제거 (안 쓰니까!)
+import React, { useState, useEffect, useRef } from 'react';
 
 const SetLocationPage = () => {
-    // const navigate = useNavigate(); // 이 줄을 삭제했습니다.
     
-    // 상태 관리
+    // ---------------------------------------------------
+    // 1. 상태 관리 변수들
+    // ---------------------------------------------------
     const [userId, setUserId] = useState(null);
     const [sidoList, setSidoList] = useState([]);
     const [sigunguList, setSigunguList] = useState([]);
@@ -14,83 +14,170 @@ const SetLocationPage = () => {
     const [selectedSigungu, setSelectedSigungu] = useState('');
     const [selectedLocationId, setSelectedLocationId] = useState(null);
 
-    // 0. 사용자 ID 가져오기
-    useEffect(() => {
-        fetch('/api/session/me', {
-            credentials: 'include'
-        })
-        .then(res => res.json())
-        .then(data => {
-            if (data.userId) {
-                setUserId(data.userId);
-            }
-        })
-        .catch(err => console.error(err));
-    }, []);
+    // 지도와 폴리곤 관련 상태
+    const mapRef = useRef(null);      // 카카오맵 객체 저장
+    const polygonRef = useRef(null);  // 현재 그려진 폴리곤 저장
+    const [geoData, setGeoData] = useState(null); // geo.json 데이터 저장
 
-// 1. 시/도 목록 가져오기 (수정됨!)
+    // 스타일
+    const selectStyle = {
+        width: '100%', height: '50px', padding: '0 15px', fontSize: '16px',
+        border: '1px solid #ddd', borderRadius: '8px', backgroundColor: '#fff',
+        outline: 'none', marginBottom: '15px', cursor: 'pointer'
+    };
+
+    // ---------------------------------------------------
+    // 2. 초기화 (유저ID, GeoJSON 로딩, 지도 대기 및 생성)
+    // ---------------------------------------------------
     useEffect(() => {
-        fetch('/api/locations/sido')
-            .then(res => {
-                // 응답이 성공(200)이 아니면 에러 처리
-                if (!res.ok) {
-                    throw new Error(`HTTP error! status: ${res.status}`);
-                }
-                return res.json();
-            })
+        // (1) 유저 세션 확인
+        fetch('/api/session/me', { credentials: 'include' })
+            .then(res => res.json()).then(data => { if (data.userId) setUserId(data.userId); })
+            .catch(console.error);
+
+        // (2) 시/도 목록 로딩
+        fetch('/api/locations/sido').then(res => res.json()).then(setSidoList).catch(console.error);
+
+        // (3) GeoJSON 파일 미리 읽어오기
+        fetch('/geo.json')
+            .then(res => res.json())
             .then(data => {
-                console.log("서버에서 받은 시/도 데이터:", data); // 👈 F12 콘솔에서 이거 확인 필수!
-
-                // 데이터가 진짜 배열인지 확인하고 넣기 (안전장치)
-                if (Array.isArray(data)) {
-                    setSidoList(data);
-                } else {
-                    console.error("데이터가 리스트가 아닙니다!:", data);
-                    setSidoList([]); // 빈 배열로 초기화해서 멈춤 방지
-                }
+                console.log("GeoJSON 로드 성공:", data);
+                setGeoData(data);
             })
-            .catch(err => {
-                console.error("시/도 목록 불러오기 실패:", err);
-                setSidoList([]); // 에러 나도 빈 배열로 둬서 멈춤 방지
-            });
+            .catch(err => console.error("GeoJSON 로드 실패:", err));
+
+        // (4) 🗺️ 카카오맵 생성
+        const container = document.getElementById('kakao-map');
+        
+        const initMap = () => {
+            // 🚨 [수정 핵심] 지도를 그리기 전에 기존 내용을 싹 비워줍니다! (중복 방지)
+            container.innerHTML = ''; 
+            
+            const options = {
+                center: new window.kakao.maps.LatLng(37.566826, 126.9786567), // 서울 시청
+                level: 7
+            };
+            const map = new window.kakao.maps.Map(container, options);
+            mapRef.current = map;
+            console.log("카카오맵 로드 완료!");
+        };
+
+        if (window.kakao && window.kakao.maps) {
+            initMap();
+        } else {
+            console.log("카카오맵 로딩 대기 중...");
+            const interval = setInterval(() => {
+                if (window.kakao && window.kakao.maps) {
+                    clearInterval(interval);
+                    initMap();
+                }
+            }, 100);
+            return () => clearInterval(interval);
+        }
+
     }, []);
 
-    // 2. 시/도 변경 핸들러
+    // ---------------------------------------------------
+    // 3. 핸들러 함수들
+    // ---------------------------------------------------
+
+    // 시/도 변경
     const handleSidoChange = (e) => {
         const sido = e.target.value;
         setSelectedSido(sido);
         setSelectedSigungu('');
         setDongList([]);
         setSelectedLocationId(null);
+        removePolygon(); 
 
         if (sido) {
             fetch(`/api/locations/sigungu?sido=${sido}`)
                 .then(res => res.json())
-                .then(data => setSigunguList(data))
-                .catch(err => console.error(err));
+                .then(data => setSigunguList(Array.isArray(data) ? data : []))
+                .catch(console.error);
         }
     };
 
-    // 3. 시/군/구 변경 핸들러
+    // 시/군/구 변경
     const handleSigunguChange = (e) => {
         const sigungu = e.target.value;
         setSelectedSigungu(sigungu);
         setSelectedLocationId(null);
+        removePolygon(); 
 
         if (sigungu) {
             fetch(`/api/locations/dong?sido=${selectedSido}&sigungu=${sigungu}`)
                 .then(res => res.json())
-                .then(data => setDongList(data))
-                .catch(err => console.error(err));
+                .then(data => setDongList(Array.isArray(data) ? data : []))
+                .catch(console.error);
         }
     };
 
-    // 4. 동 선택 핸들러
+    // 동 변경 (폴리곤 그리기)
     const handleDongChange = (e) => {
-        setSelectedLocationId(e.target.value);
+        const locationId = e.target.value; 
+        setSelectedLocationId(locationId);
+
+        if (locationId) {
+            drawPolygon(locationId); 
+        }
     };
 
-    // 5. 저장 버튼 핸들러
+    // ---------------------------------------------------
+    // 4. 지도 & 폴리곤 그리기 로직
+    // ---------------------------------------------------
+
+    const removePolygon = () => {
+        if (polygonRef.current) {
+            polygonRef.current.setMap(null); 
+            polygonRef.current = null;
+        }
+    };
+
+    const drawPolygon = (dbLocationId) => {
+        if (!mapRef.current || !geoData) return;
+
+        removePolygon();
+
+        // DB ID(10자리)로 GeoJSON ID(8자리) 찾기
+        const strDbId = String(dbLocationId);
+        const feature = geoData.features.find(f => strDbId.startsWith(f.properties.EMD_CD));
+
+        if (!feature) {
+            console.log("⚠️ 해당 동의 경계 데이터 없음. DB ID:", dbLocationId);
+            return;
+        }
+
+        // 좌표 변환 및 그리기
+        let coordinates = [];
+        if (feature.geometry.type === "Polygon") {
+            coordinates = feature.geometry.coordinates[0];
+        } else if (feature.geometry.type === "MultiPolygon") {
+            coordinates = feature.geometry.coordinates[0][0];
+        }
+
+        const path = coordinates.map(coord => new window.kakao.maps.LatLng(coord[1], coord[0]));
+
+        const polygon = new window.kakao.maps.Polygon({
+            path: path,
+            strokeWeight: 2,
+            strokeColor: '#FF6F0F', 
+            strokeOpacity: 0.8,
+            fillColor: '#FF6F0F',
+            fillOpacity: 0.4 
+        });
+
+        polygon.setMap(mapRef.current);
+        polygonRef.current = polygon;
+
+        // 지도의 중심 이동
+        const centerLat = path[0].getLat();
+        const centerLng = path[0].getLng();
+        mapRef.current.panTo(new window.kakao.maps.LatLng(centerLat, centerLng));
+    };
+
+    // 저장 버튼
     const handleSubmit = () => {
         if (!selectedLocationId || !userId) {
             alert("지역을 끝까지 선택해주세요.");
@@ -99,72 +186,56 @@ const SetLocationPage = () => {
 
         fetch('/api/locations/user', {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-                userId: userId,
-                locationId: selectedLocationId
-            })
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ userId, locationId: selectedLocationId })
         })
         .then(res => {
             if (res.ok) {
-                alert("동네 설정이 완료되었습니다!");
-                // 새로고침하여 메인 페이지로 이동 (세션 정보 갱신을 위해)
+                alert("동네 설정 완료!");
                 window.location.href = `/main/${userId}`;
             } else {
-                alert("설정에 실패했습니다.");
+                alert("설정 실패");
             }
         })
-        .catch(err => {
-            console.error(err);
-            alert("오류가 발생했습니다.");
-        });
+        .catch(console.error);
     };
 
+    // ---------------------------------------------------
+    // 5. 화면 렌더링
+    // ---------------------------------------------------
     return (
-        <div style={{ padding: '20px', display: 'flex', flexDirection: 'column', alignItems: 'center', marginTop: '50px' }}>
-            <h2>동네 설정하기</h2>
-            <p style={{ color: '#666', marginBottom: '30px' }}>거래를 시작하기 위해 동네를 인증해주세요.</p>
+        <div style={{ 
+            padding: '20px', display: 'flex', flexDirection: 'column', alignItems: 'center', 
+            backgroundColor: '#f9f9f9', minHeight: '100vh' 
+        }}>
+            <h2 style={{ fontSize: '24px', fontWeight: 'bold', marginBottom: '10px' }}>동네 설정하기</h2>
+            
+            <div id="kakao-map" style={{ 
+                width: '100%', maxWidth: '400px', height: '300px', 
+                borderRadius: '12px', marginBottom: '20px', border: '1px solid #ddd',
+                boxShadow: '0 2px 5px rgba(0,0,0,0.1)'
+            }}></div>
 
-            <div style={{ width: '100%', maxWidth: '400px', display: 'flex', flexDirection: 'column', gap: '15px' }}>
-                
-                {/* 시/도 선택 */}
-                <select 
-                    style={{ padding: '10px', fontSize: '16px' }} 
-                    value={selectedSido} 
-                    onChange={handleSidoChange}
-                >
+            <div style={{ width: '100%', maxWidth: '400px' }}>
+                <select style={selectStyle} value={selectedSido} onChange={handleSidoChange}>
                     <option value="">시/도 선택</option>
                     {sidoList.map((item, idx) => (
                         <option key={idx} value={item.sido}>{item.sido}</option>
                     ))}
                 </select>
 
-                {/* 시/군/구 선택 */}
-                <select 
-                    style={{ padding: '10px', fontSize: '16px' }} 
-                    value={selectedSigungu} 
-                    onChange={handleSigunguChange} 
-                    disabled={!selectedSido}
-                >
+                <select style={selectStyle} value={selectedSigungu} onChange={handleSigunguChange} disabled={!selectedSido}>
                     <option value="">시/군/구 선택</option>
                     {sigunguList.map((item, idx) => (
                         <option key={idx} value={item.sigungu}>{item.sigungu}</option>
                     ))}
                 </select>
 
-                {/* 동 선택 */}
-                <select 
-                    style={{ padding: '10px', fontSize: '16px' }} 
-                    value={selectedLocationId || ''} 
-                    onChange={handleDongChange} 
-                    disabled={!selectedSigungu}
-                >
+                <select style={selectStyle} value={selectedLocationId || ''} onChange={handleDongChange} disabled={!selectedSigungu}>
                     <option value="">읍/면/동 선택</option>
                     {dongList.map((item) => (
                         <option key={item.locationId} value={item.locationId}>
-                            {item.dong}
+                            {item.eupmyeondong}
                         </option>
                     ))}
                 </select>
@@ -173,15 +244,11 @@ const SetLocationPage = () => {
                     onClick={handleSubmit} 
                     disabled={!selectedLocationId}
                     style={{
-                        marginTop: '20px',
-                        padding: '15px',
+                        width: '100%', marginTop: '20px', padding: '18px',
                         backgroundColor: selectedLocationId ? '#FF6F0F' : '#ccc',
-                        color: 'white',
-                        border: 'none',
-                        borderRadius: '5px',
-                        fontSize: '18px',
-                        fontWeight: 'bold',
-                        cursor: selectedLocationId ? 'pointer' : 'not-allowed'
+                        color: 'white', border: 'none', borderRadius: '8px',
+                        fontSize: '18px', fontWeight: 'bold', cursor: selectedLocationId ? 'pointer' : 'not-allowed',
+                        transition: '0.3s'
                     }}
                 >
                     설정 완료

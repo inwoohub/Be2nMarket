@@ -1,4 +1,5 @@
 package com.example.entity;
+
 import jakarta.persistence.*;
 import lombok.*;
 import java.math.BigDecimal;
@@ -8,7 +9,7 @@ import java.math.BigDecimal;
 public class Location {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    // @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long location_id;
 
     @Column(nullable = false, length = 100)
@@ -21,10 +22,8 @@ public class Location {
     private String sigungu;
 
     @Column(length = 30)
-    private String eupmyeon;
-
-    @Column(length = 30)
-    private String dong;
+    private String eupmyeondong; 
+    // ----------------------------
 
     @Column(precision = 10, scale = 7)
     private BigDecimal latitude;

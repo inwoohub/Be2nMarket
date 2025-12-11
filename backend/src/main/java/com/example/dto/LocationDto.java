@@ -20,7 +20,7 @@ public class LocationDto {
     @Data @AllArgsConstructor @NoArgsConstructor
     public static class DongResponse {
         private Long locationId; // 프론트가 나중에 이걸 서버로 보냄
-        private String dong;
+        private String eupmyeondong;
         private String displayName;
     }
 

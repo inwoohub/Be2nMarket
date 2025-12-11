@@ -20,6 +20,6 @@ public interface LocationRepository extends JpaRepository<Location, Long> {
     List<String> findDistinctSigungu(@Param("sido") String sido);
 
     // 3. 해당 시/도 + 시/군/구에 속한 읍/면/동 목록 (Location 엔티티 전체 반환)
-    @Query("SELECT l FROM Location l WHERE l.sido = :sido AND l.sigungu = :sigungu ORDER BY l.dong")
+    @Query("SELECT l FROM Location l WHERE l.sido = :sido AND l.sigungu = :sigungu ORDER BY l.eupmyeondong")
     List<Location> findDongList(@Param("sido") String sido, @Param("sigungu") String sigungu);
 }
