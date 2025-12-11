@@ -1,13 +1,11 @@
 import React, { useEffect, useState, useRef } from "react";
 import "../css/Index.css";
 import "../css/ProfilePage.css"
-import { Link, useNavigate, useParams } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import Modal from "../modal/ProfileModal";
 
 
 function ProfilePage() {
-    const { userId: paramUserId } = useParams();
-    const navigate = useNavigate();
 
     const [imgLoaded, setImgLoaded] = useState(false);
     const [profile, setProfile] = useState(null);
@@ -20,26 +18,19 @@ function ProfilePage() {
     const [uploading, setUploading] = useState(false);
     const fileInputRef = useRef(null);
 
-    // [핵심 수정] 이미지 경로 안전 처리 함수
-    const getSafeImageUrl = (url) => {
-        if (!url) return "/User.png"; 
-        if (url.startsWith('http') || url.startsWith('data:')) return url;
-        if (url.startsWith('/')) return url;
-        // 상대 경로일 경우 앞에 /를 붙여 절대 경로로 변환
-        return `/${url}`; 
-    };
+    const navigate = useNavigate();
+
 
     useEffect(() => {
-        fetch("/api/session/me", {
-            credentials: "include",
+        fetch("/api/me", {
+            credentials: "include",   // 세션 쿠키 같이 보내기
         })
             .then((res) => res.json())
             .then((data) => {
-                if (data.auth === "oauth2") {
-                    // data.user가 있으면 쓰고, 없으면 data 자체를 사용 (호환성)
-                    const userInfo = data.user || data;
-                    setProfile(userInfo);
-                    setEditNickname(userInfo.nickname || "");
+                if (data.auth === "oauth2" && data.user) {
+                    setProfile(data.user,);
+                    setEditNickname(data.user.nickname || "");
+
                 }
                 setLoading(false);
             })
@@ -150,6 +141,8 @@ function ProfilePage() {
         }
     };
 
+
+
     useEffect(() => {
         fetch("/api/wallet/balance", {
             credentials: "include",
@@ -159,7 +152,7 @@ function ProfilePage() {
                 if (data.success) {
                     setCash(data.balance);
                 } else {
-                    // console.error("잔액 조회 실패", data); // 조용히 실패 처리
+                    console.error("잔액 조회 실패", data);
                 }
             })
             .catch((err) => {
@@ -170,7 +163,7 @@ function ProfilePage() {
     if (loading) {
         return (
             <div className="app-shell">
-                <div className="sub-app-shell" style={{ backgroundColor: '#000000', color: '#ffffff', height: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <div className="sub-app-shell">
                     프로필 정보를 불러오는 중입니다...
                 </div>
             </div>
@@ -180,39 +173,38 @@ function ProfilePage() {
     if (!profile) {
         return (
             <div className="app-shell">
-                <div className="sub-app-shell" style={{ backgroundColor: '#000000', color: '#ffffff', height: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <div className="sub-app-shell">
                     로그인 후 프로필을 확인할 수 있어요.
                 </div>
             </div>
         );
     }
 
+
     const nickname = profile.nickname || "Unknown";
-    
-    // [수정] 안전한 이미지 경로 함수 사용
-    const profileImageUrl = getSafeImageUrl(profile.profileImageUrl);
+
+    const profileImageUrl =
+        profile.profileImageUrl || "/User.png";
 
     const mannerTemp =
         typeof profile.mannerScore === "number"
             ? profile.mannerScore
             : 36.5;
 
-    const userId = profile?.userId || paramUserId;
+    const reviews = "10";
+    const isAdmin = profile?.role === "admin";
+
+
+    const userId = profile?.userId;
     const salePath = userId ? `/sale/${userId}` : "/login";
     const reviewPath = userId ? `/review/${userId}` : "/login";
 
     return (
         <div className="app-shell">
-            <div className="sub-app-shell" style={{ 
-                backgroundColor: '#000000', // 배경 검정
-                color: '#ffffff',           // 텍스트 흰색
-                minHeight: '100vh',
-                paddingBottom: '10vh',
-                boxSizing: 'border-box'
-            }}>
+            <div className="sub-app-shell">
 
                 {/*사진 / 이름*/}
-                <div className="profilepage_name" style={{ borderBottom: '1px solid #333' }}>
+                <div className="profilepage_name">
                     <div className="profilepage_name_left">
                         <img
                             className="profilepage_profileImage"
@@ -222,14 +214,11 @@ function ProfilePage() {
                             style={{
                                 opacity: imgLoaded ? 1 : 0,
                                 transition: "opacity 0.3s ease",
-                                backgroundColor: '#333',
-                                objectFit: 'cover'
                             }}
-                            onError={(e) => {e.target.src = '/User.png'}}
                         />
                     </div>
                     <div className="profilepage_name_right">
-                        <span style={{ color: '#ffffff', fontWeight: 'bold' }}>{nickname}</span>
+                        <span>{nickname}</span>
                     </div>
                 </div>
 
@@ -238,59 +227,59 @@ function ProfilePage() {
                     <button
                         className="profilepage_profileFix_btn"
                         onClick={() => setIsEditModalOpen(true)}
-                        style={{ backgroundColor: '#333', color: '#fff', border: '1px solid #555' }}
                         >
                         프로필 수정
                     </button>
                 </div>
 
+
                 {/*무한루프 페이*/}
                 <div className="profilepage_cash">
-                    <div className="profilepage_cash_title" style={{ color: '#ffffff' }}>
+                    <div className="profilepage_cash_title">
                         무한루프 페이
                     </div>
-                    <div className="profilepage_cash_content" style={{ backgroundColor: '#222' }}>
+                    <div className="profilepage_cash_content">
                         <div className="profilpage_cash_content_section1">
-                            <button className="profilepage_cash_btn" onClick={() => navigate(`/wallet/topup/${userId}`)} style={{ color: '#fff' }}>
+                            <button className="profilepage_cash_btn" onClick={() => navigate(`/wallet/topup/${userId}`)}>
                                 충전하기
                             </button>
                             <button
                                 className="profilepage_cash_btn"
                                 onClick={() => navigate(`/wallet/withdraw/${userId}`)}
-                                style={{ color: '#fff' }}
                             >
                                 출금하기
                             </button>
                         </div>
                         <div className="profilpage_cash_content_section2">
-                            <div className="profilepage_cash_currentCash" style={{ color: '#fff' }}>
+                            <div className="profilepage_cash_currentCash">
                                 {cash !== null ? `${cash.toLocaleString()}원` : "잔액 불러오는 중..."}
                             </div>
                         </div>
                     </div>
                 </div>
 
+
                 {/* 매너 온도 */}
                 <div className="profilepage_manner">
                     <div className="profilepage_manner_header">
-                        <span className="profilepage_manner_title" style={{ color: '#ffffff' }}>매너 온도</span>
+                        <span className="profilepage_manner_title">매너 온도</span>
                     </div>
 
                     <div className="profilepage_manner_middle">
                         {/* 가로 막대 게이지 */}
-                        <div className="profilepage_manner_value" style={{ color: '#0dcc5a' }}>
+                        <div className="profilepage_manner_value">
                             {mannerTemp.toFixed(1)}°C
                         </div>
 
-                        <div className="profilepage_manner_bar" style={{ backgroundColor: '#444' }}>
+                        <div className="profilepage_manner_bar">
                             <div
                                 className="profilepage_manner_bar_fill"
-                                style={{ width: `${mannerTemp}%`, backgroundColor: '#0dcc5a' }}
+                                style={{ width: `${mannerTemp}%` }}
                             />
                         </div>
 
-                        {/* 눈금 표시 */}
-                        <div className="profilepage_manner_scale" style={{ color: '#888' }}>
+                        {/* 눈금 표시 (선택) */}
+                        <div className="profilepage_manner_scale">
                             <span>0</span>
                             <span>50</span>
                             <span>100</span>
@@ -298,45 +287,49 @@ function ProfilePage() {
                     </div>
                 </div>
 
+
                 {/*판매 물품*/}
-                <Link to={salePath} className="profilepage_sale" style={{ borderBottom: '1px solid #333' }}>
+                <Link to={salePath} className="profilepage_sale">
                     <div className="profilepage_sale_left">
-                        <span className="profilepage_sale_title" style={{ color: '#ffffff' }}>
+                        <span className="profilepage_sale_title">
                             판매 물품
                         </span>
                     </div>
                     <div className="profilepage_sale_right">
-                        <img className="profilepage_right_arrow"  alt="바로가기" src="/right_arrow.png" style={{ filter: 'invert(1)' }} />
+                        <img className="profilepage_right_arrow"  alt="바로가기" src="/right_arrow.png" />
                     </div>
                 </Link>
 
+
                 {/*상점 리뷰*/}
                 <div className="profilepage_review">
-                    <Link to={reviewPath} className="profilepage_review_sub" style={{ borderBottom: '1px solid #333' }}>
+                    <Link to={reviewPath} className="profilepage_review_sub">
                         <div className="profilepage_sale_left">
-                        <span className="profilepage_sale_title" style={{ color: '#ffffff' }}>
+                        <span className="profilepage_sale_title">
                             상점 리뷰
                         </span>
                         </div>
                         <div className="profilepage_sale_right">
-                            <img className="profilepage_right_arrow"  alt="바로가기" src="/right_arrow.png" style={{ filter: 'invert(1)' }} />
+                            <img className="profilepage_right_arrow"  alt="바로가기" src="/right_arrow.png" />
                         </div>
                     </Link>
                     <div className="profilepage_review_content">
-                         {/* 리뷰 1 */}
-                         <div className="profilepage_review_card" style={{ borderBottom: '1px solid #333' }}>
+
+
+                        {/* 리뷰 1 */}
+                        <div className="profilepage_review_card">
                             <div className="review_card_left">
-                                <div className="review_avatar" style={{ backgroundColor: '#333', color: '#fff' }}>
+                                <div className="review_avatar">
                                     짱
                                 </div>
                             </div>
 
                             <div className="review_card_right">
                                 <div className="review_card_top">
-                                    <span className="review_from_nickname" style={{ color: '#fff' }}>
+                                    <span className="review_from_nickname">
                                         짱구아빠
                                     </span>
-                                    <span className="review_created_at" style={{ color: '#888' }}>
+                                    <span className="review_created_at">
                                         2025.11.24
                                     </span>
                                 </div>
@@ -349,20 +342,71 @@ function ProfilePage() {
                                     <span className="star_empty">★</span>
                                 </div>
 
-                                <p className="review_card_comment" style={{ color: '#ddd' }}>
+                                <p className="review_card_comment">
                                     상태가 좋아요. 시간 약속도 잘 지키셨어요!
                                 </p>
 
-                                <div className="review_card_trade" style={{ color: '#aaa', backgroundColor: '#222' }}>
+                                <div className="review_card_trade">
                                     닌텐도 스위치 거래
                                 </div>
                             </div>
                         </div>
+
+                        {/* 리뷰 2 */}
+                        <div className="profilepage_review_card">
+                            <div className="review_card_left">
+                                <div className="review_avatar">
+                                    훈
+                                </div>
+                            </div>
+
+                            <div className="review_card_right">
+                                <div className="review_card_top">
+                                    <span className="review_from_nickname">
+                                        훈이
+                                    </span>
+                                    <span className="review_created_at">
+                                        2025.11.20
+                                    </span>
+                                </div>
+
+                                <div className="review_card_rating">
+                                    <span className="star_filled">★</span>
+                                    <span className="star_filled">★</span>
+                                    <span className="star_filled">★</span>
+                                    <span className="star_filled">★</span>
+                                    <span className="star_filled">★</span>
+                                </div>
+
+                                <p className="review_card_comment">
+                                    친절하고 응답도 빨라요. 또 거래하고 싶어요 😊
+                                </p>
+
+                                <div className="review_card_trade">
+                                    책 3권 세트 거래
+                                </div>
+                            </div>
+                        </div>
+
                         <div className="review_bottom_magrin"></div>
+
+                        {/*✅ 관리자용 버튼: admin만 보이도록 */}
+                        {isAdmin && (
+                            <div className="profilpage_admin_section">
+                                <a
+                                    href="/admin/withdraw-requests"
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="profilepage_admin_btn"
+                                >
+                                    출금 관리 (관리자 페이지)
+                                </a>
+                            </div>
+                        )}
                     </div>
+
                 </div>
             </div>
-            
             <Modal
                 isOpen={isEditModalOpen}
                 onClose={() => {
@@ -371,13 +415,13 @@ function ProfilePage() {
                 }}
                 title="프로필 수정"
             >
+                {/* 모달 내용 */}
                 <div className="profile_modal_avatar_section">
                     <div className="profile_modal_avatar_wrapper">
                         <img
                             className="profile_modal_profileImage"
                             alt="프로필 사진"
                             src={profileImageUrl}
-                            style={{ objectFit: 'cover' }}
                         />
                     </div>
                     <div className="profile_modal_avatar_wrapper2">
@@ -425,7 +469,11 @@ function ProfilePage() {
                 </div>
             </Modal>
         </div>
+
+
     );
 }
 
 export default ProfilePage;
+
+

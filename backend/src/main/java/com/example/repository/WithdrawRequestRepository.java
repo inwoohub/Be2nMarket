@@ -20,4 +20,14 @@ public interface WithdrawRequestRepository extends JpaRepository<WithdrawRequest
 
     Page<WithdrawRequest> findByStatus(WithdrawStatus status, Pageable pageable);
 
+    @Query("""
+        select coalesce(sum(w.amount), 0)
+        from WithdrawRequest w
+        where w.status = :status
+    """)
+    long sumAmountByStatus(@Param("status") WithdrawStatus status);
+
+    long countByStatus(WithdrawStatus status);
+
+
 }

@@ -36,6 +36,7 @@ dependencies {
     runtimeOnly 'com.mysql:mysql-connector-j'
     implementation 'org.springframework.boot:spring-boot-starter-oauth2-client'
     implementation 'com.amazonaws:aws-java-sdk-s3:1.12.772'
+    implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.6.0'    //Swagger UI :  http://localhost:8080/swagger-ui/index.html#/
 }
 
 tasks.named('test') {

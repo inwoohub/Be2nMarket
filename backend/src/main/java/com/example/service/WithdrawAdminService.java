@@ -1,5 +1,6 @@
 package com.example.service;
 
+import com.example.dto.WalletLedgerDto;
 import com.example.dto.WithdrawRequestDto;
 import com.example.entity.User;
 import com.example.entity.Wallet;
@@ -7,10 +8,7 @@ import com.example.entity.WalletLedger;
 import com.example.entity.WithdrawRequest;
 import com.example.entity.enums.LedgerEntryType;
 import com.example.entity.enums.WithdrawStatus;
-import com.example.repository.UserRepository;
-import com.example.repository.WalletLedgerRepository;
-import com.example.repository.WalletRepository;
-import com.example.repository.WithdrawRequestRepository;
+import com.example.repository.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -18,6 +16,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -27,6 +26,7 @@ public class WithdrawAdminService {
     private final WalletRepository walletRepository;
     private final WalletLedgerRepository walletLedgerRepository;
     private final UserRepository userRepository;
+
 
     private User getAdminOrThrow(Long adminUserId) {
         User admin = userRepository.findById(adminUserId)
@@ -107,6 +107,48 @@ public class WithdrawAdminService {
         wr.setRejected_at(LocalDateTime.now());
         wr.setReject_reason(reason);
         wr.setAdmin(admin);
+    }
+
+    public WalletLedgerDto getLedgerSummary(Long adminUserId) {
+
+        User admin = getAdminOrThrow(adminUserId);
+
+        List<LedgerEntryType> topupTypes = List.of(
+                LedgerEntryType.TOPUP_CARD,
+                LedgerEntryType.TOPUP_ACCOUNT
+        );
+
+        long totalTopupAmount = walletLedgerRepository.sumAmountByEntryTypes(topupTypes);
+        long totalTopupCount  = walletLedgerRepository.countByEntryTypes(topupTypes);
+
+        // 🔹 출금 완료/대기
+        long totalWithdrawCompletedAmount =
+                withdrawRequestRepository.sumAmountByStatus(WithdrawStatus.COMPLETED);
+        long totalWithdrawCompletedCount =
+                withdrawRequestRepository.countByStatus(WithdrawStatus.COMPLETED);
+
+        long totalWithdrawPendingAmount =
+                withdrawRequestRepository.sumAmountByStatus(WithdrawStatus.PENDING);
+        long totalWithdrawPendingCount =
+                withdrawRequestRepository.countByStatus(WithdrawStatus.PENDING);
+
+        // 유저 잔액 합
+        long totalUserBalance = walletRepository.sumAllBalance();
+
+        // 장부 검증: 총 충전액 = 유저 잔액 + 완료된 출금액 + 출금 대기 금액
+        long diff = totalTopupAmount - (totalUserBalance + totalWithdrawCompletedAmount+totalWithdrawPendingAmount);
+
+        return WalletLedgerDto.builder()
+                .totalTopupAmount(totalTopupAmount)
+                .totalTopupCount(totalTopupCount)
+                .totalWithdrawCompletedAmount(totalWithdrawCompletedAmount)
+                .totalWithdrawCompletedCount(totalWithdrawCompletedCount)
+                .totalWithdrawPendingAmount(totalWithdrawPendingAmount)
+                .totalWithdrawPendingCount(totalWithdrawPendingCount)
+                .totalUserBalance(totalUserBalance)
+                .diff(diff)
+                .generatedAt(LocalDateTime.now())
+                .build();
     }
 }
 

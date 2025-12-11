@@ -15,6 +15,7 @@ import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
@@ -38,10 +39,8 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
         Map<String, Object> attributes = oAuth2User.getAttributes();
         log.info("Kakao attributes: {}", attributes);
 
-
         String kakaoIdStr = String.valueOf(attributes.get("id"));
         Long kakaoId = Long.parseLong(kakaoIdStr);
-
 
         String nickname = "사용자";
         Object ka = attributes.get("kakao_account");
@@ -61,20 +60,31 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
                 .orElseGet(() -> User.builder()
                         .user_id(kakaoId)
                         .nickname(finalNickname)
+                        .role("user")
                         .build()
                 );
 
         if (user.getNickname() == null || user.getNickname().isBlank()) {
             user.setNickname(nickname);
         }
+
+        if (user.getRole() == null || user.getRole().isBlank()) {
+            user.setRole("user");
+        }
+
         userRepository.save(user);
 
         walletService.getOrCreateWallet(user.getUser_id());
 
+        Map<String, Object> newAttrs = new HashMap<>(attributes);
+        newAttrs.put("appUserId", user.getUser_id());
+        newAttrs.put("appNickname", user.getNickname());
+        newAttrs.put("role", user.getRole());
+
 
         return new DefaultOAuth2User(
                 Set.of(new SimpleGrantedAuthority("ROLE_USER")),
-                attributes,
+                newAttrs,
                 "id"
         );
     }

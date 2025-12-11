@@ -37,7 +37,8 @@ public class ProfileService {
                         "userId", user.getUser_id(),
                         "nickname", user.getNickname(),
                         "profileImageUrl", profileImageUrl == null ? "" : profileImageUrl,
-                        "mannerScore", user.getManner_score()
+                        "mannerScore", user.getManner_score(),
+                        "role", user.getRole()
                 )
         );
     }

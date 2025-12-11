@@ -20,4 +20,7 @@ public interface WalletRepository extends JpaRepository<Wallet, Long> {
     Optional<Wallet> findByUserIdForUpdate(@Param("userId") Long userId);
 
 
+    @Query("select coalesce(sum(w.balance), 0) from Wallet w")
+    long sumAllBalance();
+
 }

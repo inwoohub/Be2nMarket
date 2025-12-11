@@ -35,6 +35,7 @@ public class SessionController {
                 "auth", "oauth2",
                 "userId", sessionUser.id(),
                 "nickname", sessionUser.nickname(),
+                "role", sessionUser.role(),
                 "hasLocation", hasLocation // 프론트가 이걸 보고 판단함!
         );
     }

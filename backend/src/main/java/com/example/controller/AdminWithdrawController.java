@@ -1,5 +1,6 @@
 package com.example.controller;
 
+import com.example.dto.WalletLedgerDto;
 import com.example.dto.WithdrawRequestDto;
 import com.example.entity.enums.WithdrawStatus;
 import com.example.service.WithdrawAdminService;
@@ -22,7 +23,7 @@ public class AdminWithdrawController {
     @GetMapping
     public Page<WithdrawRequestDto> list(
             @SessionAttribute(name = "USER", required = false) SessionUser sessionUser,
-            @RequestParam(required = false, defaultValue = "PENDING") WithdrawStatus status,
+            @RequestParam(required = false) WithdrawStatus status,
             Pageable pageable
     ) {
         if (sessionUser == null) {
@@ -58,5 +59,12 @@ public class AdminWithdrawController {
         String reason = body.getOrDefault("reason", "관리자 거절");
         withdrawAdminService.reject(sessionUser.id(), id, reason);
         return ResponseEntity.ok().build();
+    }
+
+    @GetMapping("/ledger")
+    public WalletLedgerDto ledger(
+            @SessionAttribute(name = "USER", required = false) SessionUser sessionUser
+    ){
+        return withdrawAdminService.getLedgerSummary(sessionUser.id());
     }
 }
