@@ -1,4 +1,3 @@
-// src/main/java/com/example/service/ProfilService.java
 package com.example.service;
 
 import com.example.entity.User;
@@ -9,6 +8,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.net.URL;
+import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
 import java.util.Map;
 
 @Service
@@ -26,7 +28,8 @@ public class ProfileService {
 
     public Map<String, Object> getMyProfile(SessionUser sessionUser) {
         User user = getUserOrThrow(sessionUser);
-        String profileImageUrl = s3Uploader.getFileUrl(user.getProfile_image_url());
+        // [수정] DB에 저장된 값이 이미 전체 URL이므로 그대로 사용
+        String profileImageUrl = user.getProfile_image_url();
 
         return Map.of(
                 "auth", "oauth2",
@@ -42,21 +45,43 @@ public class ProfileService {
     public String updateProfileImage(SessionUser sessionUser, MultipartFile file) throws IOException {
         User user = getUserOrThrow(sessionUser);
 
-        String key = s3Uploader.uploadProfileImage(user.getUser_id(), file);
-        user.setProfile_image_url(key);
+        // [수정] 범용 upload 메서드 사용 (폴더명: "profile")
+        String imageUrl = s3Uploader.upload(file, "profile");
+
+        user.setProfile_image_url(imageUrl);
         userRepository.save(user);
 
-        return s3Uploader.getFileUrl(key);
+        return imageUrl;
     }
 
     public void deleteProfileImage(SessionUser sessionUser) {
         User user = getUserOrThrow(sessionUser);
+        String fileUrl = user.getProfile_image_url();
 
-        String oldKey = user.getProfile_image_url();
-        s3Uploader.deleteFile(oldKey);
+        if (fileUrl != null && !fileUrl.isBlank()) {
+            // [수정] URL에서 S3 키 추출하여 삭제 요청
+            String key = extractKeyFromUrl(fileUrl);
+            s3Uploader.deleteFile(key);
+        }
 
         user.setProfile_image_url(null);
         userRepository.save(user);
+    }
+
+    // [추가] URL에서 S3 객체 키 추출
+    private String extractKeyFromUrl(String fileUrl) {
+        try {
+            URL url = new URL(fileUrl);
+            String path = url.getPath();
+            // path가 "/버킷명/폴더/파일" 또는 "/폴더/파일" 형태로 올 수 있음
+            if (path.startsWith("/")) {
+                path = path.substring(1);
+            }
+            return URLDecoder.decode(path, StandardCharsets.UTF_8.name());
+        } catch (Exception e) {
+            // 파싱 실패 시 로그를 남기거나 원본 반환
+            return fileUrl;
+        }
     }
 
     public String updateNickname(SessionUser sessionUser, String newNickname) {
@@ -82,5 +107,4 @@ public class ProfileService {
             if (score > 12) { throw new IllegalArgumentException("닉네임은 한글 기준 6자, 영문/숫자 기준 12자 이내로 입력해주세요."); }
         }
     }
-
 }

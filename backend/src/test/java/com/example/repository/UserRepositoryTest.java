@@ -15,7 +15,7 @@ import org.assertj.core.api.Assertions;
 @DataJpaTest
 @ActiveProfiles("dev")
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
-@Rollback(false)
+@Rollback(true)
 class UserRepositoryTest {
 
     @Autowired

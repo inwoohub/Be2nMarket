@@ -8,5 +8,9 @@ public enum LedgerEntryType {
     TRADE_PAY,
     TRADE_PAYOUT,
     REFUND,
-    FEE
+    FEE,
+
+    // 출금 요청 / 거절
+    WITHDRAW_REQUEST,
+    WITHDRAW_REJECT
 }

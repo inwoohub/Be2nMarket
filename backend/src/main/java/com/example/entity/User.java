@@ -24,6 +24,9 @@ public class User {
     @Column(length = 255)
     private String profile_image_url;
 
+    @Column(length = 20)
+    private String role;
+
     @Builder.Default
     @Column(precision = 4, scale = 1)
     private BigDecimal manner_score = new BigDecimal("36.5");

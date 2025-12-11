@@ -1,14 +1,21 @@
 package com.example.service;
 
+import com.example.dto.PostCreateRequestDto;
 import com.example.dto.PostDetailResponseDto;
 import com.example.dto.PostListResponseDto;
-import com.example.entity.Post;
-import com.example.entity.PostImage;
+import com.example.entity.*;
+import com.example.repository.CategoryRepository;
+import com.example.repository.LocationRepository;
 import com.example.repository.PostRepository;
+import com.example.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
+import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -18,16 +25,71 @@ import java.util.stream.Collectors;
 public class PostService {
 
     private final PostRepository postRepository;
+    private final UserRepository userRepository;
+    private final CategoryRepository categoryRepository; // 필요 시 생성 확인
+    private final LocationRepository locationRepository; // 필요 시 생성 확인
+    private final S3Uploader s3Uploader; // S3 업로더 주입
+
+    /**
+     * [추가됨] 게시글 생성
+     * - 이미지 파일들을 S3에 업로드하고 게시글과 함께 저장합니다.
+     */
+    @Transactional
+    public Long createPost(Long userId, PostCreateRequestDto requestDto, List<MultipartFile> images) throws IOException {
+        // 1. 연관 엔티티 조회
+        User seller = userRepository.findById(userId)
+                .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다. id=" + userId));
+
+        Category category = categoryRepository.findById(requestDto.getCategoryId())
+                .orElseThrow(() -> new IllegalArgumentException("카테고리를 찾을 수 없습니다. id=" + requestDto.getCategoryId()));
+
+        Location location = locationRepository.findById(requestDto.getLocationId())
+                .orElseThrow(() -> new IllegalArgumentException("위치 정보를 찾을 수 없습니다. id=" + requestDto.getLocationId()));
+
+        // 2. 게시글 엔티티 생성
+        Post post = Post.builder()
+                .seller(seller)
+                .category(category)
+                .location(location)
+                .title(requestDto.getTitle())
+                .content(requestDto.getContent())
+                .price(requestDto.getPrice())
+                .created_at(LocalDateTime.now()) // 빌더 패턴에서 자동 생성 안 될 경우 명시
+                .build();
+
+        // 3. 이미지 업로드 및 저장
+        if (images != null && !images.isEmpty()) {
+            List<PostImage> postImages = new ArrayList<>();
+            for (int i = 0; i < images.size(); i++) {
+                MultipartFile file = images.get(i);
+                if (file.isEmpty()) continue;
+
+                // S3 업로드 (폴더명: "post")
+                String imageUrl = s3Uploader.upload(file, "post");
+
+                // PostImage 엔티티 생성
+                PostImage postImage = PostImage.builder()
+                        .post(post)
+                        .url(imageUrl)
+                        .sort_order(i)
+                        .build();
+
+                postImages.add(postImage);
+            }
+            // 양방향 연관관계 설정 (CascadeType.ALL로 인해 post 저장 시 같이 저장됨)
+            post.setImages(postImages);
+        }
+
+        // 4. 저장
+        Post savedPost = postRepository.save(post);
+        return savedPost.getPost_id();
+    }
 
     /**
      * 1. 메인 페이지 게시글 목록 조회
-     * - 삭제되지 않은 모든 게시글을 최신순으로 가져와 DTO로 변환합니다.
      */
     public List<PostListResponseDto> getAllPosts() {
-        // Repository에서 엔티티 리스트 조회
         List<Post> posts = postRepository.findAllDesc();
-
-        // Entity -> DTO 변환 (Stream 사용)
         return posts.stream()
                 .map(this::convertToListDto)
                 .collect(Collectors.toList());
@@ -35,8 +97,6 @@ public class PostService {
 
     /**
      * 2. 게시글 상세 조회
-     * - 특정 게시글(postId)을 조회하여 상세 DTO로 변환합니다.
-     * - 게시글이 없거나 삭제된 경우 예외를 발생시킵니다.
      */
     public PostDetailResponseDto getPostDetail(Long postId) {
         Post post = postRepository.findActivePostById(postId)
@@ -45,12 +105,9 @@ public class PostService {
         return convertToDetailDto(post);
     }
 
-    // [내부 메서드] Post 엔티티 -> PostListResponseDto 변환
     private PostListResponseDto convertToListDto(Post post) {
-        // 대표 이미지 URL 추출 (이미지가 없으면 null 또는 기본 이미지 처리)
         String thumbnailUrl = null;
         if (!post.getImages().isEmpty()) {
-            // 정렬 순서(sort_order)가 가장 빠른 첫 번째 이미지를 썸네일로 사용
             thumbnailUrl = post.getImages().get(0).getUrl();
         }
 
@@ -58,19 +115,17 @@ public class PostService {
                 .postId(post.getPost_id())
                 .title(post.getTitle())
                 .price(post.getPrice())
-                // Location 엔티티의 메서드를 몰라 임시로 null 처리 (추후 수정 필요)
-                .location("위치 정보 없음")
+                // Location 엔티티의 실제 메서드 사용 (이전 코드는 null 처리했었음)
+                .location(post.getLocation().getDisplay_name())
                 .thumbnailUrl(thumbnailUrl)
-                .status(post.getStatus().name()) // Enum -> String
+                .status(post.getStatus().name())
                 .createdAt(post.getCreated_at())
-                .likeCount(0) // 좋아요 기능 미구현으로 0 처리
-                .chatCount(0) // 채팅 수 미구현으로 0 처리
+                .likeCount(0)
+                .chatCount(0)
                 .build();
     }
 
-    // [내부 메서드] Post 엔티티 -> PostDetailResponseDto 변환
     private PostDetailResponseDto convertToDetailDto(Post post) {
-        // 전체 이미지 URL 리스트 추출
         List<String> imageUrls = post.getImages().stream()
                 .map(PostImage::getUrl)
                 .collect(Collectors.toList());
@@ -78,17 +133,14 @@ public class PostService {
         return PostDetailResponseDto.builder()
                 .postId(post.getPost_id())
                 .title(post.getTitle())
-                // Category 엔티티 메서드 미확인으로 임시 처리
-                .category("카테고리 없음")
+                .category(post.getCategory().getName()) // 실제 카테고리명 사용
                 .price(post.getPrice())
                 .content(post.getContent())
-                // Location 엔티티 메서드 미확인으로 임시 처리
-                .location("위치 정보 없음")
+                .location(post.getLocation().getDisplay_name()) // 실제 위치명 사용
                 .status(post.getStatus().name())
                 .imageUrls(imageUrls)
                 .viewCount(post.getView_count())
                 .createdAt(post.getCreated_at())
-                // 판매자 정보 매핑
                 .sellerId(post.getSeller().getUser_id())
                 .sellerNickname(post.getSeller().getNickname())
                 .sellerProfileImage(post.getSeller().getProfile_image_url())

@@ -1,5 +1,5 @@
-import React, {useContext, useEffect, useState} from "react";
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import React, { useEffect, useState } from "react";
+import { BrowserRouter as Router, Routes, Route, useNavigate, useLocation } from "react-router-dom";
 import { AuthContext } from "./AuthContext";
 import Layout from "./layouts/Layout";
 import HeaderLayout from "./layouts/HeaderLayout";
@@ -11,13 +11,39 @@ import MainPage from "./pages/MainPage";
 import ProfilePage from "./pages/ProfilePage";
 import ChatPage from "./pages/ChatPage";
 import ChatListPage from "./pages/ChatListPage";
-import PostDetailPage from "./pages/PostDetailPage"; 
+import PostDetailPage from "./pages/PostDetailPage";
+import PostWritePage from "./pages/PostWritePage"; // [추가됨] 게시글 작성 페이지 임포트
 import WalletTopupPage from "./pages/WalletTopupPage";
 import PayTopupSuccessPage from "./pages/PayTopupSuccessPage";
 import PayTopupFailPage from "./pages/PayTopupFailPage";
+import WalletWithdrawPage from "./pages/WalletWithdrawPage";
+import AdminWithdrawListPage from "./pages/AdminWithdrawListPage";
+import SetLocationPage from "./pages/SetLocationPage";
 
 //css
 import "./css/App.css";
+
+// 🔹 위치 감시 컴포넌트
+function LocationGuard({ auth }) {
+    const navigate = useNavigate();
+    const location = useLocation();
+
+    useEffect(() => {
+        if (auth.user) {
+            console.log("현재 로그인 유저 정보:", auth.user);
+        }
+
+        if (!auth.loading && auth.user && auth.user.auth === "oauth2") {
+            // "위치 정보가 없고(false 혹은 undefined)" AND "현재 설정 페이지가 아니라면"
+            if (!auth.user.hasLocation && location.pathname !== "/set-location") {
+                console.log("위치 정보 없음 감지! 설정 페이지로 이동합니다.");
+                navigate("/set-location");
+            }
+        }
+    }, [auth, navigate, location]);
+
+    return null;
+}
 
 function App() {
 
@@ -43,13 +69,24 @@ function App() {
     return (
         <AuthContext.Provider value={auth}>
             <Router>
+                {/* LocationGuard가 실시간으로 위치 설정을 감시합니다 */}
+                <LocationGuard auth={auth} />
+
                 <Routes>
                     <Route path="/wallet/topup/success" element={<PayTopupSuccessPage />} />
                     <Route path="/wallet/topup/fail" element={<PayTopupFailPage />} />
 
+                    {/* 위치 설정 페이지 */}
+                    <Route path="/set-location" element={<SetLocationPage />} />
+
+                    {/* [추가됨] 게시글 작성 페이지 */}
+                    {/* 전체 화면을 덮기 위해 Layout 밖에 배치합니다 */}
+                    <Route path="/posts/write/:userId" element={<PostWritePage />} />
+
                     <Route element={<Layout />}>
                         <Route path="/" element={<Index />} />
 
+                        {/* 메인 페이지 */}
                         <Route
                             element={
                                 <HeaderLayout
@@ -64,15 +101,15 @@ function App() {
                             </Route>
                         </Route>
 
-                        {/* 게시글 상세 페이지 */}
-                        {/* 헤더만 있고 바텀네비는 없는 레이아웃 사용 (채팅 버튼이 하단에 고정되므로) */}
+                        {/* [수정됨] 게시글 상세 페이지 */}
+                        {/* 검정 테마 오류 해결: backBlack.png -> backWhite.png */}
                         <Route
                             element={
                                 <HeaderLayout
-                                    title="" // 상세 페이지는 보통 타이틀 없이 투명하거나 뒤로가기만 있음
+                                    title="" 
                                     isBack={true}
                                     left={
-                                        <img className="Header-icon" alt="뒤로가기" src="/backBlack.png" />
+                                        <img className="Header-icon" alt="뒤로가기" src="/backWhite.png" />
                                     }
                                     right=""
                                 />
@@ -81,6 +118,7 @@ function App() {
                             <Route path="/posts/:postId/:userId" element={<PostDetailPage />} />
                         </Route>
 
+                        {/* 채팅 목록 페이지 */}
                         <Route
                             element={
                                 <HeaderLayout
@@ -99,6 +137,7 @@ function App() {
                             </Route>
                         </Route>
 
+                        {/* 개별 채팅방 페이지 */}
                         <Route
                             element={
                                 <HeaderLayout
@@ -111,11 +150,13 @@ function App() {
                                 />
                             }
                         >
+                            {/* 채팅방 내부에서는 보통 하단 탭바를 숨깁니다 (입력창 때문). 필요시 WithBottomNav 제거 가능 */}
                             <Route element={<WithBottomNav />}>
                                 <Route path="/chat/:roomId/:userId" element={<ChatPage />} />
                             </Route>
                         </Route>
 
+                        {/* 프로필 페이지 */}
                         <Route
                             element={
                                 <HeaderLayout
@@ -133,6 +174,7 @@ function App() {
                             </Route>
                         </Route>
 
+                        {/* 충전 페이지 */}
                         <Route
                             element={
                                 <HeaderLayout
@@ -150,6 +192,28 @@ function App() {
                             </Route>
                         </Route>
 
+                        {/* 출금 페이지 */}
+                        <Route
+                            element={
+                                <HeaderLayout
+                                    title="출금하기"
+                                    isBack={true}
+                                    left={
+                                        <img className="Header-icon"  alt="뒤로가기" src="/backWhite.png" />
+                                    }
+                                    right=""
+                                />
+                            }
+                        >
+                            <Route element={<WithBottomNav />}>
+                                <Route path="/wallet/withdraw/:userId" element={<WalletWithdrawPage />} />
+                            </Route>
+                        </Route>
+
+                        {/* 관리자 승인 페이지*/}
+                        <Route path="/admin/withdraw-requests" element={<AdminWithdrawListPage />} />
+
+                        {/* 라우터 구분선 */}
                     </Route>
 
                 </Routes>
