@@ -1,15 +1,17 @@
 package com.example.controller;
 
+import com.example.dto.PostCreateRequestDto;
 import com.example.dto.PostDetailResponseDto;
 import com.example.dto.PostListResponseDto;
 import com.example.service.PostService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.http.MediaType;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequiredArgsConstructor
@@ -20,8 +22,6 @@ public class PostController {
 
     /**
      * 1. 메인 페이지 게시글 목록 조회 API
-     * - 경로: GET /api/posts
-     * - 반환: 모든 게시글의 요약 정보 리스트 (최신순)
      */
     @GetMapping
     public List<PostListResponseDto> getAllPosts() {
@@ -30,11 +30,31 @@ public class PostController {
 
     /**
      * 2. 게시글 상세 조회 API
-     * - 경로: GET /api/posts/{postId}
-     * - 반환: 특정 게시글의 상세 정보 (사진, 내용, 판매자 정보 등)
      */
     @GetMapping("/{postId}")
     public PostDetailResponseDto getPostDetail(@PathVariable Long postId) {
         return postService.getPostDetail(postId);
+    }
+
+    /**
+     * [추가됨] 3. 게시글 생성 API
+     * - 경로: POST /api/posts
+     * - Content-Type: multipart/form-data
+     * - 파라미터:
+     * - post (json): 제목, 내용, 가격 등
+     * - images (file): 이미지 파일 목록
+     * - userId (json field - 임시): 로그인 세션 대신 요청 바디나 파라미터로 받음 (실제로는 세션에서 꺼내야 함)
+     * (여기서는 편의상 post DTO 안이나 별도 파라미터로 처리하지 않고, 일단 DTO와 파일을 받습니다.
+     * 유저 ID는 세션 연동 전이라 임시로 1001번 고정하거나 파라미터로 받을 수 있습니다.
+     * 테스트 편의를 위해 DTO 안에 넣지 않고 @RequestPart로 받습니다.)
+     */
+    @PostMapping(consumes = {MediaType.MULTIPART_FORM_DATA_VALUE})
+    public Long createPost(
+            @RequestPart("post") PostCreateRequestDto requestDto,
+            @RequestPart(value = "images", required = false) List<MultipartFile> images,
+            @RequestParam(value = "userId", required = false, defaultValue = "1001") Long userId
+    ) throws IOException {
+        // 실제 서비스 호출 (userId는 파라미터로 받음)
+        return postService.createPost(userId, requestDto, images);
     }
 }
