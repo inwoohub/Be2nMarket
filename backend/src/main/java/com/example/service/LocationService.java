@@ -43,7 +43,7 @@ public class LocationService {
         return locationRepository.findDongList(sido, sigungu).stream()
                 .map(loc -> new LocationDto.DongResponse(
                         loc.getLocation_id(), 
-                        loc.getDong(), 
+                        loc.getEupmyeondong(), // [수정] getDong() -> getEupmyeondong()
                         loc.getDisplay_name()))
                 .collect(Collectors.toList());
     }
