@@ -4,10 +4,7 @@ import com.example.dto.PostCreateRequestDto;
 import com.example.dto.PostDetailResponseDto;
 import com.example.dto.PostListResponseDto;
 import com.example.entity.*;
-import com.example.repository.CategoryRepository;
-import com.example.repository.LocationRepository;
-import com.example.repository.PostRepository;
-import com.example.repository.UserRepository;
+import com.example.repository.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -29,6 +26,7 @@ public class PostService {
     private final CategoryRepository categoryRepository; // 필요 시 생성 확인
     private final LocationRepository locationRepository; // 필요 시 생성 확인
     private final S3Uploader s3Uploader; // S3 업로더 주입
+    private final UserLocationRepository userLocationRepository;
 
     /**
      * [추가됨] 게시글 생성
@@ -36,6 +34,11 @@ public class PostService {
      */
     @Transactional
     public Long createPost(Long userId, PostCreateRequestDto requestDto, List<MultipartFile> images) throws IOException {
+        //점검용 로그
+        System.out.println(">>> createPost userId=" + userId +
+                ", categoryId=" + requestDto.getCategoryId() +
+                ", locationId=" + requestDto.getLocationId());
+
         // 1. 연관 엔티티 조회
         User seller = userRepository.findById(userId)
                 .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다. id=" + userId));
@@ -43,8 +46,11 @@ public class PostService {
         Category category = categoryRepository.findById(requestDto.getCategoryId())
                 .orElseThrow(() -> new IllegalArgumentException("카테고리를 찾을 수 없습니다. id=" + requestDto.getCategoryId()));
 
-        Location location = locationRepository.findById(requestDto.getLocationId())
-                .orElseThrow(() -> new IllegalArgumentException("위치 정보를 찾을 수 없습니다. id=" + requestDto.getLocationId()));
+        UserLocation userLocation = userLocationRepository
+                .findPrimaryByUserId(userId)
+                .orElseThrow(() -> new IllegalArgumentException("대표 위치 설정 정보가 없습니다. id="));
+
+        Location location = userLocation.getLocation();
 
         // 2. 게시글 엔티티 생성
         Post post = Post.builder()

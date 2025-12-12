@@ -4,8 +4,10 @@ import com.example.dto.PostCreateRequestDto;
 import com.example.dto.PostDetailResponseDto;
 import com.example.dto.PostListResponseDto;
 import com.example.service.PostService;
+import com.example.session.SessionUser;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -49,12 +51,19 @@ public class PostController {
      * 테스트 편의를 위해 DTO 안에 넣지 않고 @RequestPart로 받습니다.)
      */
     @PostMapping(consumes = {MediaType.MULTIPART_FORM_DATA_VALUE})
-    public Long createPost(
+    public ResponseEntity<?> createPost(
+            @SessionAttribute(name = "USER", required = false) SessionUser sessionUser,
             @RequestPart("post") PostCreateRequestDto requestDto,
-            @RequestPart(value = "images", required = false) List<MultipartFile> images,
-            @RequestParam(value = "userId", required = false, defaultValue = "1001") Long userId
+            @RequestPart(value = "images", required = false) List<MultipartFile> images
     ) throws IOException {
+        if (sessionUser == null) {
+            return ResponseEntity.status(401).body(Map.of(
+                    "error", "UNAUTHORIZED",
+                    "message", "로그인이 필요합니다."
+            ));
+        }
         // 실제 서비스 호출 (userId는 파라미터로 받음)
-        return postService.createPost(userId, requestDto, images);
+        Long postId = postService.createPost(sessionUser.id(), requestDto, images);
+        return ResponseEntity.ok(postId);
     }
 }

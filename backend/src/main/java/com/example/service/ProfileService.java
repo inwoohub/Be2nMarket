@@ -46,7 +46,6 @@ public class ProfileService {
     public String updateProfileImage(SessionUser sessionUser, MultipartFile file) throws IOException {
         User user = getUserOrThrow(sessionUser);
 
-        // [수정] 범용 upload 메서드 사용 (폴더명: "profile")
         String imageUrl = s3Uploader.upload(file, "profile");
 
         user.setProfile_image_url(imageUrl);
@@ -55,12 +54,12 @@ public class ProfileService {
         return imageUrl;
     }
 
+
     public void deleteProfileImage(SessionUser sessionUser) {
         User user = getUserOrThrow(sessionUser);
         String fileUrl = user.getProfile_image_url();
 
         if (fileUrl != null && !fileUrl.isBlank()) {
-            // [수정] URL에서 S3 키 추출하여 삭제 요청
             String key = extractKeyFromUrl(fileUrl);
             s3Uploader.deleteFile(key);
         }
@@ -68,6 +67,7 @@ public class ProfileService {
         user.setProfile_image_url(null);
         userRepository.save(user);
     }
+
 
     // [추가] URL에서 S3 객체 키 추출
     private String extractKeyFromUrl(String fileUrl) {
