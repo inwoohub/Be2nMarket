@@ -28,6 +28,10 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
     implementation 'org.springframework.boot:spring-boot-starter-web'
     implementation 'org.springframework.boot:spring-boot-starter-websocket'
+    // RabbitMQ 사용을 위한 라이브러리
+    implementation 'org.springframework.boot:spring-boot-starter-amqp'
+    // 외부 브로커(RabbitMQ)와 통신하기 위한 리액터 네티 라이브러리
+    implementation 'io.projectreactor.netty:reactor-netty'
     compileOnly 'org.projectlombok:lombok'
     developmentOnly 'org.springframework.boot:spring-boot-devtools'
     annotationProcessor 'org.projectlombok:lombok'

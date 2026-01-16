@@ -15,16 +15,13 @@ function ChatPage() {
     const myId = userId ? parseInt(userId) : 1001;
     const chatroomId = roomId ? parseInt(roomId) : 1;
 
-    // 실제 메시지 데이터를 저장할 상태
     const [messages, setMessages] = useState([]);
-    // 채팅방 정보(헤더용) 상태
     const [roomInfo, setRoomInfo] = useState(null);
     const [input, setInput] = useState('');
 
     useEffect(() => {
         if (!chatroomId) return;
 
-        // 1. 채팅방 상세 정보(헤더) 가져오기
         const fetchRoomInfo = async () => {
             try {
                 const response = await fetch(`http://localhost:8080/api/chat/room/${chatroomId}/info?myId=${myId}`, {
@@ -43,7 +40,6 @@ function ChatPage() {
             }
         };
 
-        // 2. 과거 대화 내역 가져오기
         const fetchMessages = async () => {
             try {
                 const response = await fetch(`http://localhost:8080/api/chat/room/${chatroomId}/messages`, {
@@ -63,13 +59,13 @@ function ChatPage() {
         fetchRoomInfo();
         fetchMessages();
 
-        // 3. 웹소켓 연결
         const client = new Client({
             webSocketFactory: () => new SockJS('http://localhost:8080/ws-stomp'),
             reconnectDelay: 5000,
             onConnect: () => {
                 console.log(`>>> 웹소켓 연결 성공! (방: ${chatroomId})`);
-                client.subscribe(`/topic/chatroom/${chatroomId}`, (message) => {
+                
+                client.subscribe(`/topic/chatroom.${chatroomId}`, (message) => { 
                     const receivedMsg = JSON.parse(message.body);
                     setMessages((prev) => [...prev, receivedMsg]);
                 });
@@ -87,7 +83,6 @@ function ChatPage() {
         };
     }, [chatroomId, myId]);
 
-    // 스크롤 자동 이동
     useEffect(() => {
         messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
     }, [messages]);
@@ -127,7 +122,6 @@ function ChatPage() {
         return `${ampm} ${hours}:${minutes}`;
     };
 
-    // 이미지 경로 처리 (외부 URL이면 그대로, 아니면 / 추가)
     const getSafeImageUrl = (url) => {
         if (!url) return null;
         if (url.startsWith('http') || url.startsWith('data:')) return url;
@@ -147,16 +141,14 @@ function ChatPage() {
                 color: '#ffffff',
                 backgroundColor: '#000000'
             }}>
-                {/* 상단 정보 바 */}
                 <div style={{ 
                     padding: '10px 15px', 
                     borderBottom: '1px solid #333',
-                    display: 'flex',
+                    display: 'flex', 
                     alignItems: 'center',
                     height: '60px',
                     flexShrink: 0
                 }}>
-                    {/* 상품 이미지 */}
                     <div style={{ marginRight: '10px', width: '40px', height: '40px', borderRadius: '6px', backgroundColor: '#333', overflow: 'hidden' }}>
                         {roomInfo && roomInfo.postImage ? (
                             <img 
@@ -170,7 +162,6 @@ function ChatPage() {
                         )}
                     </div>
                     
-                    {/* 상품 정보 및 상대방 닉네임 */}
                     <div style={{ display: 'flex', flexDirection: 'column', flex: 1 }}>
                         <div style={{ display: 'flex', alignItems: 'center' }}>
                             {roomInfo ? (
@@ -192,7 +183,6 @@ function ChatPage() {
                             <span style={{ fontSize: '13px', fontWeight: 'bold', marginTop: '2px' }}>
                                 {roomInfo ? formatPrice(roomInfo.postPrice) : ""}
                             </span>
-                            {/* 상대방 닉네임 표시 */}
                             <span style={{ fontSize: '12px', color: '#aaa' }}>
                                 {roomInfo ? `대화상대: ${roomInfo.otherUserNickname}` : ""}
                             </span>
@@ -200,7 +190,6 @@ function ChatPage() {
                     </div>
                 </div>
 
-                {/* 채팅 목록 */}
                 <div style={{ flex: 1, overflowY: 'auto', padding: '15px', display: 'flex', flexDirection: 'column' }}>
                     {messages.length === 0 ? (
                         <div style={{ margin: 'auto', color: '#888', textAlign: 'center' }}>
@@ -262,7 +251,6 @@ function ChatPage() {
                     <div ref={messagesEndRef} />
                 </div>
 
-                {/* 하단 입력창 */}
                 <div style={{ 
                     padding: '10px 15px', 
                     borderTop: '1px solid #333', 

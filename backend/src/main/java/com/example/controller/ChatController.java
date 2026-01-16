@@ -27,7 +27,8 @@ public class ChatController {
     @MessageMapping("/chat/send")
     public void sendMessage(ChatMessageDto messageDto) {
         ChatMessageDto savedMessage = chatService.saveMessage(messageDto);
-        messagingTemplate.convertAndSend("/topic/chatroom/" + savedMessage.getChatroomId(), savedMessage);
+        // [수정] RabbitMQ 규칙에 맞춰 "/topic/chatroom.{방번호}" 형식으로 메시지를 발행합니다.
+        messagingTemplate.convertAndSend("/topic/chatroom." + savedMessage.getChatroomId(), savedMessage);
     }
 
     /**
@@ -50,21 +51,19 @@ public class ChatController {
 
     /**
      * 4. 채팅방 생성 또는 기존 방 조회 (HTTP POST)
-     * - 게시글별 채팅방 분리를 위해 postId를 함께 받습니다.
      */
     @PostMapping("/api/chat/room")
     @ResponseBody
     public Long createOrFindChatRoom(@RequestBody Map<String, Long> request) {
         Long myId = request.get("myId");
         Long sellerId = request.get("sellerId");
-        Long postId = request.get("postId"); // [핵심] 게시글 ID를 받아서 서비스로 전달
+        Long postId = request.get("postId");
 
         return chatService.createOrFindChatRoom(myId, sellerId, postId);
     }
 
     /**
      * 5. 채팅방 상세 정보 조회 (헤더 표시용) (HTTP GET)
-     * - 상품 정보(사진, 가격 등)와 상대방 닉네임을 반환합니다.
      */
     @GetMapping("/api/chat/room/{chatroomId}/info")
     @ResponseBody
