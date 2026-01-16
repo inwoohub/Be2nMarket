@@ -13,12 +13,14 @@ import ChatPage from "./pages/ChatPage";
 import ChatListPage from "./pages/ChatListPage";
 import PostDetailPage from "./pages/PostDetailPage";
 import PostWritePage from "./pages/PostWritePage"; // [추가됨] 게시글 작성 페이지 임포트
+import ReviewWritePage from "./pages/ReviewWritePage";
 import WalletTopupPage from "./pages/WalletTopupPage";
 import PayTopupSuccessPage from "./pages/PayTopupSuccessPage";
 import PayTopupFailPage from "./pages/PayTopupFailPage";
 import WalletWithdrawPage from "./pages/WalletWithdrawPage";
 import AdminWithdrawListPage from "./pages/AdminWithdrawListPage";
 import SetLocationPage from "./pages/SetLocationPage";
+
 
 //css
 import "./css/App.css";
@@ -82,6 +84,10 @@ function App() {
                     {/* [추가됨] 게시글 작성 페이지 */}
                     {/* 전체 화면을 덮기 위해 Layout 밖에 배치합니다 */}
                     <Route path="/posts/write/:userId" element={<PostWritePage />} />
+
+                    {/* ⭐⭐⭐ [신규 추가] 거래 후기 작성 페이지 ⭐⭐⭐ */}
+                    {/* 전체 화면을 덮기 위해 Layout 밖에 배치 (HeaderLayout, BottomNav 없음) */}
+                    <Route path="/reviews/write/:userId/:postId/:partnerId" element={<ReviewWritePage />} />
 
                     <Route element={<Layout />}>
                         <Route path="/" element={<Index />} />
