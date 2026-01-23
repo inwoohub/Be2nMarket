@@ -63,7 +63,7 @@ function PostWritePage() {
             content: content,
             price: price ? parseInt(price.replace(/,/g, '')) : 0,
             categoryId: parseInt(categoryId),
-            // locationId: 1 // 하드코딩 -> DB 직접 조회
+            locationId: 1111010100 // 위치는 현재 하드코딩 (추후 연동)
         };
         
         // 백엔드 @RequestPart("post")에 대응하기 위해 application/json 타입 지정

@@ -1,4 +1,5 @@
 package com.example.entity;
+
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
@@ -28,6 +29,9 @@ public class Review {
 
     @Column(length = 400)
     private String comment;
+
+    @Column(name = "selected_keywords", length = 100)
+    private String selectedKeywords;
 
     @CreationTimestamp
     private LocalDateTime created_at;
