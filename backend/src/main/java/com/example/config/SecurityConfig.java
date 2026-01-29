@@ -36,9 +36,12 @@ public class SecurityConfig {
                                 "/", "/health", "/favicon.ico",
                                 "/oauth2/**", "/login/**",
                                 "/images/**", "/css/**", "/js/**",
-                                "/ws-stomp/**",      // [핵심] 웹소켓 연결 주소 허용
-                                "/api/session/me",   // [추가] 로그인 상태 확인 API 허용
-                                "/api/**"            // [추가] API 요청 일단 허용 (필요에 따라 줄이세요)
+                                "/ws-stomp/**",
+                                "/api/session/me",
+                                "/api/me",
+                                "/api/posts",
+                                "/api/posts/{postId}",
+                                "/api/locations/**"
                         ).permitAll()
                         // 2. 그 외 모든 요청은 로그인해야 함
                         .anyRequest().authenticated()

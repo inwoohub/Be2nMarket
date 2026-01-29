@@ -1,15 +1,16 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useContext } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { AuthContext } from '../AuthContext';
+import { formatPrice, getSafeImageUrl } from '../utils/format';
 
 import "../css/Index.css";
 import "../css/MainPage.css";
 
 function PostDetailPage() {
-    const { postId, userId } = useParams();
+    const { postId } = useParams();
     const navigate = useNavigate();
-    
-    // 현재 로그인한 사용자 ID (없으면 1001번 가정)
-    const myId = userId ? parseInt(userId) : 1001;
+    const auth = useContext(AuthContext);
+    const myId = auth?.user?.userId;
 
     const [post, setPost] = useState(null);
     const [loading, setLoading] = useState(true);
@@ -17,7 +18,7 @@ function PostDetailPage() {
     useEffect(() => {
         const fetchPostDetail = async () => {
             try {
-                const response = await fetch(`http://localhost:8080/api/posts/${postId}`, {
+                const response = await fetch(`/api/posts/${postId}`, {
                     method: 'GET',
                     credentials: 'include',
                 });
@@ -25,14 +26,11 @@ function PostDetailPage() {
                 if (response.ok) {
                     const data = await response.json();
                     setPost(data);
-                    console.log(">>> 게시글 상세 로딩 성공:", data);
                 } else {
-                    console.error(">>> 게시글 로딩 실패:", response.status);
                     alert("게시글을 불러올 수 없습니다.");
                     navigate(-1);
                 }
             } catch (error) {
-                console.error(">>> 에러:", error);
             } finally {
                 setLoading(false);
             }
@@ -49,29 +47,25 @@ function PostDetailPage() {
         if (!post) return;
 
         try {
-            const response = await fetch('http://localhost:8080/api/chat/room', {
+            const response = await fetch('/api/chat/room', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                 },
                 credentials: 'include',
                 body: JSON.stringify({
-                    myId: myId,
                     sellerId: post.sellerId,
-                    postId: post.postId // [핵심 수정] 게시글 ID를 함께 전송해야 500 에러가 안 납니다.
+                    postId: post.postId
                 }),
             });
 
             if (response.ok) {
                 const chatroomId = await response.json();
-                console.log(">>> 채팅방 입장/생성 성공. ID:", chatroomId);
-                navigate(`/chat/${chatroomId}/${myId}`);
+                navigate(`/chat/${chatroomId}`);
             } else {
-                console.error(">>> 채팅방 생성 실패:", response.status);
                 alert("채팅방을 연결할 수 없습니다.");
             }
         } catch (error) {
-            console.error(">>> 채팅방 연결 에러:", error);
             alert("오류가 발생했습니다.");
         }
     };
@@ -82,25 +76,13 @@ function PostDetailPage() {
         // navigate(`/posts/${post.postId}/chats`);
     };
 
-    const formatPrice = (price) => {
-        return price.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",") + "원";
-    };
-
-    // 이미지 경로 안전 처리
-    const getSafeImageUrl = (url) => {
-        if (!url) return null;
-        if (url.startsWith('http') || url.startsWith('data:')) return url;
-        if (url.startsWith('/')) return url;
-        return `/${url}`;
-    };
-
     if (loading) return <div style={{ padding: '20px', textAlign: 'center', backgroundColor: '#000000', color: '#ffffff', height: '100vh' }}>로딩 중...</div>;
     if (!post) return null;
 
     return (
         <div className="app-shell">
-            <div className="sub-app-shell" style={{ 
-                display: 'flex', 
+            <div className="sub-app-shell" style={{
+                display: 'flex',
                 flexDirection: 'column',
                 backgroundColor: '#000000',
                 height: '100vh',
@@ -108,21 +90,21 @@ function PostDetailPage() {
                 color: '#ffffff'
             }}>
                 <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '80px' }}>
-                    
+
                     {/* 이미지 슬라이더 영역 */}
-                    <div style={{ 
-                        width: '100%', 
-                        height: '300px', 
-                        backgroundColor: '#333333', 
-                        display: 'flex', 
+                    <div style={{
+                        width: '100%',
+                        height: '300px',
+                        backgroundColor: '#333333',
+                        display: 'flex',
                         overflowX: 'auto',
                         scrollSnapType: 'x mandatory'
                     }}>
                         {post.imageUrls && post.imageUrls.length > 0 ? (
                             post.imageUrls.map((url, idx) => (
-                                <img 
+                                <img
                                     key={idx}
-                                    src={getSafeImageUrl(url)} 
+                                    src={getSafeImageUrl(url)}
                                     alt={`상품 ${idx}`}
                                     style={{
                                         width: '100%',
@@ -143,11 +125,11 @@ function PostDetailPage() {
 
                     {/* 판매자 정보 영역 */}
                     <div style={{ padding: '15px', borderBottom: '1px solid #333', display: 'flex', alignItems: 'center' }}>
-                        <div style={{ 
-                            width: '40px', 
-                            height: '40px', 
-                            borderRadius: '50%', 
-                            marginRight: '10px', 
+                        <div style={{
+                            width: '40px',
+                            height: '40px',
+                            borderRadius: '50%',
+                            marginRight: '10px',
                             border: '1px solid #333',
                             backgroundColor: '#555',
                             overflow: 'hidden',
@@ -156,9 +138,9 @@ function PostDetailPage() {
                             justifyContent: 'center'
                         }}>
                             {post.sellerProfileImage ? (
-                                <img 
-                                    src={getSafeImageUrl(post.sellerProfileImage)} 
-                                    alt="프로필" 
+                                <img
+                                    src={getSafeImageUrl(post.sellerProfileImage)}
+                                    alt="프로필"
                                     style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                                     onError={(e) => {e.target.style.display='none'}}
                                 />
@@ -195,12 +177,12 @@ function PostDetailPage() {
                 </div>
 
                 {/* 하단 고정 바 */}
-                <div style={{ 
-                    position: 'absolute', 
-                    bottom: 0, 
-                    left: 0, 
-                    right: 0, 
-                    height: '70px', 
+                <div style={{
+                    position: 'absolute',
+                    bottom: 0,
+                    left: 0,
+                    right: 0,
+                    height: '70px',
                     borderTop: '1px solid #333',
                     display: 'flex',
                     alignItems: 'center',
@@ -215,13 +197,13 @@ function PostDetailPage() {
                             <span style={{ fontSize: '12px', color: '#ff8a3d', fontWeight: 'bold' }}>가격 제안 불가</span>
                         </div>
                     </div>
-                    
+
                     {/* 판매자/구매자 구분하여 버튼 표시 */}
                     {isSeller ? (
-                        <button 
+                        <button
                             onClick={handleSellerChatListClick}
                             style={{
-                                backgroundColor: '#333333', 
+                                backgroundColor: '#333333',
                                 color: '#ffffff',
                                 border: '1px solid #555',
                                 borderRadius: '5px',
@@ -234,10 +216,10 @@ function PostDetailPage() {
                             대화 중인 채팅방
                         </button>
                     ) : (
-                        <button 
+                        <button
                             onClick={handleChatClick}
                             style={{
-                                backgroundColor: '#FF8A3D', 
+                                backgroundColor: '#FF8A3D',
                                 color: 'white',
                                 border: 'none',
                                 borderRadius: '5px',

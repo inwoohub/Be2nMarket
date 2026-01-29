@@ -3,7 +3,7 @@
 import React, { useState } from "react";
 import { loadTossPayments } from "@tosspayments/payment-sdk";
 import { nanoid } from "nanoid";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 
 import "../css/TossPayment.css";
 
@@ -12,8 +12,7 @@ const clientKey = process.env.REACT_APP_TOSS_CLIENT_KEY;
 
 export default function WalletTopupPage() {
     const navigate = useNavigate();
-    const { userId } = useParams();
-    const [amount, setAmount] = useState(); // 기본 충전금액
+    const [amount, setAmount] = useState();
 
     const handleQuickAdd = (delta) => {
         setAmount((prev) => {
@@ -44,12 +43,10 @@ export default function WalletTopupPage() {
         } catch (err) {
             if (err.code === "USER_CANCEL") {
                 alert("결제가 취소되었습니다.");
-                const profilePath = userId ? `/profile/${userId}` : "/";
-                navigate(profilePath, { replace: true });
+                navigate(`/profile`, { replace: true });
                 return;
 
             }
-            console.error(err);
             alert("결제 요청 중 오류가 발생했습니다.");
         }
     };

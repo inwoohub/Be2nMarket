@@ -26,7 +26,6 @@ public class LocationDto {
 
     @Data @AllArgsConstructor @NoArgsConstructor
     public static class SetLocationRequest {
-        private Long userId;     // 로그인한 유저 ID
         private Long locationId; // 선택한 동의 ID
     }
 }

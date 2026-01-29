@@ -4,10 +4,12 @@ import com.example.dto.ReviewReqDto;
 import com.example.service.ReviewService;
 import com.example.session.SessionUser; // SessionUser import 필수
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+@Slf4j
 @RestController
 @RequestMapping("/api/reviews")
 @RequiredArgsConstructor
@@ -28,7 +30,7 @@ public class ReviewController {
 
         // 2. 세션에서 안전하게 ID 추출
         Long currentUserId = sessionUser.id();
-        System.out.println(">>> 세션에서 가져온 유저 ID: " + currentUserId);
+        log.debug("세션에서 가져온 유저 ID: {}", currentUserId);
 
         // 3. (보안 강화) 프론트에서 보낸 작성자와 세션의 작성자가 일치하는지 확인 (선택 사항)
         // 본인 확인을 위해 프론트에서 받은 데이터와 비교해도 되지만, 

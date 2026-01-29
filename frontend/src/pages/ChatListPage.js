@@ -1,27 +1,22 @@
-import React, { useEffect, useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import React, { useEffect, useState, useContext } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { AuthContext } from '../AuthContext';
+import { getSafeImageUrl, formatTimeShort } from '../utils/format';
 
 import "../css/Index.css";
 import "../css/MainPage.css";
 
 function ChatListPage() {
-    const { userId } = useParams();
     const navigate = useNavigate();
+    const auth = useContext(AuthContext);
+    const myId = auth?.user?.userId;
 
-    const myId = userId ? parseInt(userId) : 1001;
     const [chatRooms, setChatRooms] = useState([]);
-
-    const getSafeImageUrl = (url) => {
-        if (!url) return null;
-        if (url.startsWith('http') || url.startsWith('data:')) return url;
-        if (url.startsWith('/')) return url;
-        return `/${url}`;
-    };
 
     useEffect(() => {
         const fetchChatRooms = async () => {
             try {
-                const response = await fetch(`http://localhost:8080/api/chat/list/${myId}`, {
+                const response = await fetch(`/api/chat/list`, {
                     method: 'GET',
                     credentials: 'include',
                 });
@@ -29,12 +24,8 @@ function ChatListPage() {
                 if (response.ok) {
                     const data = await response.json();
                     setChatRooms(data);
-                    console.log(">>> 채팅방 목록 로딩 성공:", data.length, "개");
-                } else {
-                    console.error(">>> 채팅방 목록 로딩 실패:", response.status);
                 }
             } catch (error) {
-                console.error(">>> 에러 발생:", error);
             }
         };
 
@@ -42,21 +33,16 @@ function ChatListPage() {
     }, [myId]);
 
     const handleEnterRoom = (roomId) => {
-        navigate(`/chat/${roomId}/${myId}`);
-    };
-
-    const formatTime = (timeString) => {
-        if (!timeString) return "";
-        return timeString.substring(11, 16);
+        navigate(`/chat/${roomId}`);
     };
 
     return (
         <div className="app-shell">
-            <div className="sub-app-shell" style={{ 
-                display: 'flex', 
+            <div className="sub-app-shell" style={{
+                display: 'flex',
                 flexDirection: 'column',
                 backgroundColor: '#000000',
-                height: '100vh', 
+                height: '100vh',
                 paddingTop: '7vh',
                 paddingBottom: '10vh',
                 boxSizing: 'border-box',
@@ -69,8 +55,8 @@ function ChatListPage() {
                         </div>
                     ) : (
                         chatRooms.map((room) => (
-                            <div 
-                                key={room.chatroomId} 
+                            <div
+                                key={room.chatroomId}
                                 onClick={() => handleEnterRoom(room.chatroomId)}
                                 style={{
                                     display: 'flex',
@@ -94,26 +80,26 @@ function ChatListPage() {
                                         justifyContent: 'center'
                                     }}>
                                         {room.postImage ? (
-                                            <img 
-                                                src={getSafeImageUrl(room.postImage)} 
-                                                alt="상품" 
+                                            <img
+                                                src={getSafeImageUrl(room.postImage)}
+                                                alt="상품"
                                                 style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                                                 onError={(e) => {e.target.style.display = 'none'}}
                                             />
                                         ) : (
                                             // 상품 사진 없으면 상대방 프로필 표시
-                                            <img 
-                                                src={getSafeImageUrl(room.otherUserProfileImage) || "/User.png"} 
-                                                alt="프로필" 
+                                            <img
+                                                src={getSafeImageUrl(room.otherUserProfileImage) || "/User.png"}
+                                                alt="프로필"
                                                 style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '50%' }}
                                                 onError={(e) => {e.target.src = '/User.png'}}
                                             />
                                         )}
                                     </div>
-                                    
+
                                     {/* 상품 사진이 있을 때만 우측 하단에 작게 상대방 프로필 표시 (선택 사항) */}
                                     {room.postImage && room.otherUserProfileImage && (
-                                        <img 
+                                        <img
                                             src={getSafeImageUrl(room.otherUserProfileImage)}
                                             alt="프로필"
                                             style={{
@@ -143,12 +129,12 @@ function ChatListPage() {
                                             </span>
                                         </div>
                                         <span style={{ fontSize: '12px', color: '#aaa', flexShrink: 0, marginLeft: '10px' }}>
-                                            {formatTime(room.lastMessageTime)}
+                                            {formatTimeShort(room.lastMessageTime)}
                                         </span>
                                     </div>
                                     <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                                        <span style={{ 
-                                            fontSize: '13px', 
+                                        <span style={{
+                                            fontSize: '13px',
                                             color: '#ccc',
                                             whiteSpace: 'nowrap',
                                             overflow: 'hidden',

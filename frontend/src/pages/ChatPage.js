@@ -1,18 +1,21 @@
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState, useRef, useContext } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Client } from '@stomp/stompjs';
 import SockJS from 'sockjs-client';
+import { AuthContext } from '../AuthContext';
+import { formatPrice, formatTime, getSafeImageUrl } from '../utils/format';
 
 import "../css/Index.css";
 import "../css/MainPage.css";
 
 function ChatPage() {
-    const { roomId, userId } = useParams();
+    const { roomId } = useParams();
     const navigate = useNavigate();
     const messagesEndRef = useRef(null);
     const stompClient = useRef(null);
 
-    const myId = userId ? parseInt(userId) : 1001;
+    const auth = useContext(AuthContext);
+    const myId = auth?.user?.userId;
     const chatroomId = roomId ? parseInt(roomId) : 1;
 
     const [messages, setMessages] = useState([]);
@@ -24,25 +27,21 @@ function ChatPage() {
 
         const fetchRoomInfo = async () => {
             try {
-                const response = await fetch(`http://localhost:8080/api/chat/room/${chatroomId}/info?myId=${myId}`, {
+                const response = await fetch(`/api/chat/room/${chatroomId}/info`, {
                     method: 'GET',
                     credentials: 'include',
                 });
                 if (response.ok) {
                     const data = await response.json();
                     setRoomInfo(data);
-                    console.log(">>> 채팅방 정보 로딩 성공:", data);
-                } else {
-                    console.error(">>> 채팅방 정보 로딩 실패:", response.status);
                 }
             } catch (error) {
-                console.error(">>> 채팅방 정보 에러:", error);
             }
         };
 
         const fetchMessages = async () => {
             try {
-                const response = await fetch(`http://localhost:8080/api/chat/room/${chatroomId}/messages`, {
+                const response = await fetch(`/api/chat/room/${chatroomId}/messages`, {
                     method: 'GET',
                     credentials: 'include',
                 });
@@ -52,7 +51,6 @@ function ChatPage() {
                     setMessages(data);
                 }
             } catch (error) {
-                console.error(">>> 메시지 로딩 에러:", error);
             }
         };
 
@@ -60,18 +58,15 @@ function ChatPage() {
         fetchMessages();
 
         const client = new Client({
-            webSocketFactory: () => new SockJS('http://localhost:8080/ws-stomp'),
+            webSocketFactory: () => new SockJS('/ws-stomp'),
             reconnectDelay: 5000,
             onConnect: () => {
-                console.log(`>>> 웹소켓 연결 성공! (방: ${chatroomId})`);
-                
-                client.subscribe(`/topic/chatroom.${chatroomId}`, (message) => { 
+                client.subscribe(`/topic/chatroom.${chatroomId}`, (message) => {
                     const receivedMsg = JSON.parse(message.body);
                     setMessages((prev) => [...prev, receivedMsg]);
                 });
             },
             onStompError: (frame) => {
-                console.error('>>> 브로커 에러:', frame.headers['message']);
             },
         });
 
@@ -106,54 +101,31 @@ function ChatPage() {
         }
     };
 
-    const formatPrice = (price) => {
-        if (price === null || price === undefined) return "";
-        return price.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",") + "원";
-    };
-
-    const formatTime = (timeString) => {
-        if (!timeString) return "";
-        const date = new Date(timeString);
-        let hours = date.getHours();
-        const minutes = date.getMinutes().toString().padStart(2, '0');
-        const ampm = hours >= 12 ? '오후' : '오전';
-        hours = hours % 12;
-        hours = hours ? hours : 12; 
-        return `${ampm} ${hours}:${minutes}`;
-    };
-
-    const getSafeImageUrl = (url) => {
-        if (!url) return null;
-        if (url.startsWith('http') || url.startsWith('data:')) return url;
-        if (url.startsWith('/')) return url;
-        return `/${url}`;
-    };
-
     return (
         <div className="app-shell">
-            <div className="sub-app-shell" style={{ 
-                display: 'flex', 
+            <div className="sub-app-shell" style={{
+                display: 'flex',
                 flexDirection: 'column',
-                height: '100vh', 
+                height: '100vh',
                 paddingTop: '7vh',
                 paddingBottom: '10vh',
                 boxSizing: 'border-box',
                 color: '#ffffff',
                 backgroundColor: '#000000'
             }}>
-                <div style={{ 
-                    padding: '10px 15px', 
+                <div style={{
+                    padding: '10px 15px',
                     borderBottom: '1px solid #333',
-                    display: 'flex', 
+                    display: 'flex',
                     alignItems: 'center',
                     height: '60px',
                     flexShrink: 0
                 }}>
                     <div style={{ marginRight: '10px', width: '40px', height: '40px', borderRadius: '6px', backgroundColor: '#333', overflow: 'hidden' }}>
                         {roomInfo && roomInfo.postImage ? (
-                            <img 
-                                src={getSafeImageUrl(roomInfo.postImage)} 
-                                alt="상품" 
+                            <img
+                                src={getSafeImageUrl(roomInfo.postImage)}
+                                alt="상품"
                                 style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                                 onError={(e) => {e.target.style.display='none'}}
                             />
@@ -161,14 +133,14 @@ function ChatPage() {
                             <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '20px' }}>📦</div>
                         )}
                     </div>
-                    
+
                     <div style={{ display: 'flex', flexDirection: 'column', flex: 1 }}>
                         <div style={{ display: 'flex', alignItems: 'center' }}>
                             {roomInfo ? (
                                 <>
                                     <span style={{ fontSize: '14px', fontWeight: 'bold', marginRight: '6px' }}>
-                                        {roomInfo.postStatus === 'ON_SALE' ? '판매중' : 
-                                         roomInfo.postStatus === 'RESERVED' ? '예약중' : 
+                                        {roomInfo.postStatus === 'ON_SALE' ? '판매중' :
+                                         roomInfo.postStatus === 'RESERVED' ? '예약중' :
                                          roomInfo.postStatus === 'SOLD' ? '거래완료' : '판매중'}
                                     </span>
                                     <span style={{ fontSize: '14px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '200px' }}>
@@ -198,15 +170,15 @@ function ChatPage() {
                         </div>
                     ) : (
                         messages.map((msg, index) => (
-                            <div key={index} style={{ 
+                            <div key={index} style={{
                                 display: 'flex',
                                 justifyContent: msg.senderId === myId ? 'flex-end' : 'flex-start',
                                 marginBottom: '15px'
                             }}>
                                 {msg.senderId !== myId && (
                                     <div style={{ marginRight: '8px', display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
-                                        <div style={{ 
-                                            width: '30px', height: '30px', borderRadius: '50%', backgroundColor: '#555', overflow: 'hidden', marginBottom: '4px' 
+                                        <div style={{
+                                            width: '30px', height: '30px', borderRadius: '50%', backgroundColor: '#555', overflow: 'hidden', marginBottom: '4px'
                                         }}>
                                             {msg.senderProfileImage ? (
                                                 <img src={getSafeImageUrl(msg.senderProfileImage)} alt="프사" style={{ width: '100%', height: '100%', objectFit: 'cover' }} onError={(e) => e.target.style.display='none'} />
@@ -225,8 +197,8 @@ function ChatPage() {
                                         </span>
                                     )}
 
-                                    <div style={{ 
-                                        padding: '10px 14px', 
+                                    <div style={{
+                                        padding: '10px 14px',
                                         borderRadius: '18px',
                                         backgroundColor: msg.senderId === myId ? '#FF8A3D' : '#333333',
                                         color: 'white',
@@ -251,40 +223,40 @@ function ChatPage() {
                     <div ref={messagesEndRef} />
                 </div>
 
-                <div style={{ 
-                    padding: '10px 15px', 
-                    borderTop: '1px solid #333', 
-                    display: 'flex', 
+                <div style={{
+                    padding: '10px 15px',
+                    borderTop: '1px solid #333',
+                    display: 'flex',
                     alignItems: 'center',
                     height: '60px',
                     flexShrink: 0
                 }}>
-                    <input 
-                        type="text" 
+                    <input
+                        type="text"
                         value={input}
                         onChange={(e) => setInput(e.target.value)}
                         onKeyDown={(e) => e.key === 'Enter' && sendMessage()}
                         placeholder="메시지를 입력하세요."
-                        style={{ 
-                            flex: 1, 
-                            padding: '10px 15px', 
-                            borderRadius: '20px', 
-                            border: 'none', 
+                        style={{
+                            flex: 1,
+                            padding: '10px 15px',
+                            borderRadius: '20px',
+                            border: 'none',
                             outline: 'none',
                             backgroundColor: '#333333',
                             color: 'white',
                             fontSize: '15px'
                         }}
                     />
-                    <button 
+                    <button
                         onClick={sendMessage}
                         disabled={!input.trim()}
-                        style={{ 
-                            marginLeft: '15px', 
-                            border: 'none', 
-                            backgroundColor: 'transparent', 
-                            color: input.trim() ? '#FF8A3D' : '#666', 
-                            fontWeight: 'bold', 
+                        style={{
+                            marginLeft: '15px',
+                            border: 'none',
+                            backgroundColor: 'transparent',
+                            color: input.trim() ? '#FF8A3D' : '#666',
+                            fontWeight: 'bold',
                             cursor: input.trim() ? 'pointer' : 'default',
                             fontSize: '16px',
                             padding: '0'

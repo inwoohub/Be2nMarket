@@ -6,6 +6,7 @@ import com.example.dto.PostListResponseDto;
 import com.example.entity.*;
 import com.example.repository.*;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -16,6 +17,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
@@ -34,10 +36,8 @@ public class PostService {
      */
     @Transactional
     public Long createPost(Long userId, PostCreateRequestDto requestDto, List<MultipartFile> images) throws IOException {
-        //점검용 로그
-        System.out.println(">>> createPost userId=" + userId +
-                ", categoryId=" + requestDto.getCategoryId() +
-                ", locationId=" + requestDto.getLocationId());
+        log.debug("createPost userId={}, categoryId={}, locationId={}",
+                userId, requestDto.getCategoryId(), requestDto.getLocationId());
 
         // 1. 연관 엔티티 조회
         User seller = userRepository.findById(userId)

@@ -33,19 +33,22 @@ const SetLocationPage = () => {
         // (1) 유저 세션 확인
         fetch('/api/session/me', { credentials: 'include' })
             .then(res => res.json()).then(data => { if (data.userId) setUserId(data.userId); })
-            .catch(console.error);
+            .catch((err) => console.error('세션 확인 실패:', err));
 
         // (2) 시/도 목록 로딩
-        fetch('/api/locations/sido').then(res => res.json()).then(setSidoList).catch(console.error);
+        fetch('/api/locations/sido')
+            .then(res => res.json())
+            .then(setSidoList)
+            .catch((err) => console.error('시/도 목록 로딩 실패:', err));
 
         // (3) GeoJSON 파일 미리 읽어오기
         fetch('/geo.json')
             .then(res => res.json())
             .then(data => {
-                console.log("GeoJSON 로드 성공:", data);
+                // log:("GeoJSON 로드 성공:", data);
                 setGeoData(data);
             })
-            .catch(err => console.error("GeoJSON 로드 실패:", err));
+            .catch((err) => console.error('GeoJSON 로드 실패:', err));
 
         // (4) 🗺️ 카카오맵 생성
         const container = document.getElementById('kakao-map');
@@ -60,13 +63,13 @@ const SetLocationPage = () => {
             };
             const map = new window.kakao.maps.Map(container, options);
             mapRef.current = map;
-            console.log("카카오맵 로드 완료!");
+            // log:("카카오맵 로드 완료!");
         };
 
         if (window.kakao && window.kakao.maps) {
             initMap();
         } else {
-            console.log("카카오맵 로딩 대기 중...");
+            // log:("카카오맵 로딩 대기 중...");
             const interval = setInterval(() => {
                 if (window.kakao && window.kakao.maps) {
                     clearInterval(interval);
@@ -95,7 +98,7 @@ const SetLocationPage = () => {
             fetch(`/api/locations/sigungu?sido=${sido}`)
                 .then(res => res.json())
                 .then(data => setSigunguList(Array.isArray(data) ? data : []))
-                .catch(console.error);
+                .catch((err) => console.error('시/군/구 목록 로딩 실패:', err));
         }
     };
 
@@ -110,7 +113,7 @@ const SetLocationPage = () => {
             fetch(`/api/locations/dong?sido=${selectedSido}&sigungu=${sigungu}`)
                 .then(res => res.json())
                 .then(data => setDongList(Array.isArray(data) ? data : []))
-                .catch(console.error);
+                .catch((err) => console.error('읍/면/동 목록 로딩 실패:', err));
         }
     };
 
@@ -145,7 +148,7 @@ const SetLocationPage = () => {
         const feature = geoData.features.find(f => strDbId.startsWith(f.properties.EMD_CD));
 
         if (!feature) {
-            console.log("⚠️ 해당 동의 경계 데이터 없음. DB ID:", dbLocationId);
+            // log:("⚠️ 해당 동의 경계 데이터 없음. DB ID:", dbLocationId);
             return;
         }
 
@@ -192,12 +195,12 @@ const SetLocationPage = () => {
         .then(res => {
             if (res.ok) {
                 alert("동네 설정 완료!");
-                window.location.href = `/main/${userId}`;
+                window.location.href = `/main`;
             } else {
                 alert("설정 실패");
             }
         })
-        .catch(console.error);
+        .catch((err) => console.error('동네 설정 저장 실패:', err));
     };
 
     // ---------------------------------------------------

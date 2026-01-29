@@ -35,7 +35,7 @@ function ProfilePage() {
                 setLoading(false);
             })
             .catch((err) => {
-                console.error("/api/me error", err);
+                // error:("/api/me error", err);
                 setLoading(false);
             });
     }, []);
@@ -74,7 +74,7 @@ function ProfilePage() {
             );
 
         } catch (err) {
-            console.error("프로필 이미지 업로드 에러", err);
+            // error:("프로필 이미지 업로드 에러", err);
             alert("업로드 중 오류가 발생했습니다.");
         } finally {
             setUploading(false);
@@ -105,7 +105,7 @@ function ProfilePage() {
             );
 
         } catch (err) {
-            console.error("프로필 사진 삭제 에러", err);
+            // error:("프로필 사진 삭제 에러", err);
             alert("삭제 중 오류가 발생했습니다.");
         }
     };
@@ -136,7 +136,7 @@ function ProfilePage() {
 
             setIsEditModalOpen(false);
         } catch (err) {
-            console.error("프로필 수정 에러", err);
+            // error:("프로필 수정 에러", err);
             alert("프로필 수정 중 오류가 발생했습니다.");
         }
     };
@@ -152,11 +152,11 @@ function ProfilePage() {
                 if (data.success) {
                     setCash(data.balance);
                 } else {
-                    console.error("잔액 조회 실패", data);
+                    // error:("잔액 조회 실패", data);
                 }
             })
             .catch((err) => {
-                console.error("잔액 조회 에러", err);
+                // error:("잔액 조회 에러", err);
             });
     }, []);
 
@@ -196,8 +196,8 @@ function ProfilePage() {
 
 
     const userId = profile?.userId;
-    const salePath = userId ? `/sale/${userId}` : "/login";
-    const reviewPath = userId ? `/review/${userId}` : "/login";
+    const salePath = userId ? `/sale` : "/login";
+    const reviewPath = userId ? `/review` : "/login";
 
     return (
         <div className="app-shell">
@@ -240,12 +240,12 @@ function ProfilePage() {
                     </div>
                     <div className="profilepage_cash_content">
                         <div className="profilpage_cash_content_section1">
-                            <button className="profilepage_cash_btn" onClick={() => navigate(`/wallet/topup/${userId}`)}>
+                            <button className="profilepage_cash_btn" onClick={() => navigate(`/wallet/topup`)}>
                                 충전하기
                             </button>
                             <button
                                 className="profilepage_cash_btn"
-                                onClick={() => navigate(`/wallet/withdraw/${userId}`)}
+                                onClick={() => navigate(`/wallet/withdraw`)}
                             >
                                 출금하기
                             </button>

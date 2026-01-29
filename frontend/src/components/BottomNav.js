@@ -7,19 +7,14 @@ import "../css/BottomNav.css";
 export default function BottomNav() {
 
     const [hoveredTab, setHoveredTab] = useState(null);
-    const {loading,user } = useContext(AuthContext);
-
-
+    const {loading, user } = useContext(AuthContext);
 
     if (loading) return null;
 
-    // 경로 설정 및 로그인 풀리면 로그인 페이지
     const userId = user?.userId;
-    const mainPath = userId ? `/main/${userId}` : "/";
-    const chatPath = userId ? `/chat/${userId}` : "/";
-    const profilePath = userId ? `/profile/${userId}` : "/";
-
-
+    const mainPath = userId ? `/main` : "/";
+    const chatPath = userId ? `/chat` : "/";
+    const profilePath = userId ? `/profile` : "/";
 
     return (
         <nav className="BottomNav" role="navigation" aria-label="Tab bar">
@@ -38,8 +33,8 @@ export default function BottomNav() {
                     <img
                         src={
                             isActive || hoveredTab === "main"
-                            ? "/homeBlue.png" // 활성 / hover
-                            : "/home.png"        // 기본
+                            ? "/homeBlue.png"
+                            : "/home.png"
                         }
                         alt="메인"
                         className="BottomNav_icon"
@@ -61,8 +56,8 @@ export default function BottomNav() {
                     <img
                         src={
                             isActive || hoveredTab === "chat"
-                                ? "/chatBlue.png" // 활성 / hover
-                                : "/chat.png"        // 기본
+                                ? "/chatBlue.png"
+                                : "/chat.png"
                         }
                         alt="채팅"
                         className="BottomNav_icon"
@@ -85,8 +80,8 @@ export default function BottomNav() {
                     <img
                         src={
                             isActive || hoveredTab === "profile"
-                                ? "/userBlue.png" // 활성 / hover
-                                : "/user.png"        // 기본
+                                ? "/userBlue.png"
+                                : "/user.png"
                         }
                         alt="프로필"
                         className="BottomNav_icon"
