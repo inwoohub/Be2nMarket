@@ -54,7 +54,7 @@ public class CustomOAuth2AuthenticationSuccessHandler implements AuthenticationS
         }
 
         if (kakaoId != null) {
-            String redirect = frontendBaseUrl + "/main/" + kakaoId;
+            String redirect = frontendBaseUrl + "/main";
             response.sendRedirect(redirect);
         } else {
             // 혹시 모를 경우 기본 페이지

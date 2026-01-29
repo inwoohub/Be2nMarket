@@ -1,21 +1,21 @@
-import React, { useEffect, useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import React, { useContext, useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { AuthContext } from '../AuthContext';
+import { formatPrice, formatDate } from '../utils/format';
 
 import "../css/Index.css";
 import "../css/MainPage.css";
 
 function MainPage() {
-    const { userId } = useParams();
+    const auth = useContext(AuthContext);
     const navigate = useNavigate();
-    
-    const myId = userId ? parseInt(userId) : 1001;
 
     const [posts, setPosts] = useState([]);
 
     useEffect(() => {
         const fetchPosts = async () => {
             try {
-                const response = await fetch('http://localhost:8080/api/posts', {
+                const response = await fetch('/api/posts', {
                     method: 'GET',
                     credentials: 'include',
                 });
@@ -23,12 +23,9 @@ function MainPage() {
                 if (response.ok) {
                     const data = await response.json();
                     setPosts(data);
-                    console.log(">>> 게시글 목록 로딩 성공:", data.length, "개");
-                } else {
-                    console.error(">>> 게시글 목록 로딩 실패:", response.status);
                 }
             } catch (error) {
-                console.error(">>> 에러 발생:", error);
+                // 네트워크 에러 무시
             }
         };
 
@@ -36,30 +33,20 @@ function MainPage() {
     }, []);
 
     const handlePostClick = (postId) => {
-        navigate(`/posts/${postId}/${myId}`);
+        navigate(`/posts/${postId}`);
     };
 
-    // [수정됨] 글쓰기 페이지로 이동
     const handleWriteClick = () => {
-        navigate(`/posts/write/${myId}`);
-    };
-
-    const formatPrice = (price) => {
-        return price.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",") + "원";
-    };
-
-    const formatTime = (timeString) => {
-        if (!timeString) return "";
-        return timeString.substring(0, 10); 
+        navigate(`/posts/write`);
     };
 
     return (
         <div className="app-shell">
-            <div className="sub-app-shell" style={{ 
-                display: 'flex', 
+            <div className="sub-app-shell" style={{
+                display: 'flex',
                 flexDirection: 'column',
-                backgroundColor: '#000000', 
-                height: '100vh', 
+                backgroundColor: '#000000',
+                height: '100vh',
                 paddingTop: '7vh',
                 paddingBottom: '10vh',
                 boxSizing: 'border-box',
@@ -73,8 +60,8 @@ function MainPage() {
                         </div>
                     ) : (
                         posts.map((post) => (
-                            <div 
-                                key={post.postId} 
+                            <div
+                                key={post.postId}
                                 onClick={() => handlePostClick(post.postId)}
                                 style={{
                                     display: 'flex',
@@ -84,9 +71,9 @@ function MainPage() {
                                 }}
                             >
                                 <div style={{ marginRight: '15px' }}>
-                                    <img 
-                                        src={post.thumbnailUrl || ""} 
-                                        alt="상품 이미지" 
+                                    <img
+                                        src={post.thumbnailUrl || ""}
+                                        alt="상품 이미지"
                                         style={{
                                             width: '100px',
                                             height: '100px',
@@ -104,13 +91,13 @@ function MainPage() {
                                             {post.title}
                                         </div>
                                         <div style={{ fontSize: '12px', color: '#aaa', marginBottom: '4px' }}>
-                                            {post.location} · {formatTime(post.createdAt)}
+                                            {post.location} · {formatDate(post.createdAt)}
                                         </div>
                                         <div style={{ fontSize: '15px', fontWeight: 'bold', color: '#ffffff' }}>
                                             {formatPrice(post.price)}
                                         </div>
                                     </div>
-                                    
+
                                     <div style={{ display: 'flex', justifyContent: 'flex-end', fontSize: '12px', color: '#aaa' }}>
                                         {post.chatCount > 0 && <span style={{ marginRight: '8px' }}>💬 {post.chatCount}</span>}
                                         {post.likeCount > 0 && <span>🤍 {post.likeCount}</span>}

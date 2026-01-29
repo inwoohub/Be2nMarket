@@ -50,15 +50,15 @@ public class LocationService {
 
     // 4. 유저 위치 저장 (핵심!)
     @Transactional
-    public void registerUserLocation(LocationDto.SetLocationRequest request) {
-        User user = userRepository.findById(request.getUserId())
+    public void registerUserLocation(Long userId, Long locationId) {
+        User user = userRepository.findById(userId)
                 .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 사용자입니다."));
 
-        Location location = locationRepository.findById(request.getLocationId())
+        Location location = locationRepository.findById(locationId)
                 .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 지역입니다."));
 
         // 복합키 생성
-        UserLocationId id = new UserLocationId(request.getUserId(), request.getLocationId());
+        UserLocationId id = new UserLocationId(userId, locationId);
 
         UserLocation userLocation = UserLocation.builder()
                 .id(id)

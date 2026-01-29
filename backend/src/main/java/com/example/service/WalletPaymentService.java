@@ -8,6 +8,7 @@ import com.example.repository.*;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import java.io.*;
@@ -18,6 +19,7 @@ import java.util.Base64;
 import java.util.Map;
 
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class WalletPaymentService {
@@ -147,7 +149,7 @@ public class WalletPaymentService {
                     easyPayProvider = provider.toString();
                 }
             }
-            System.out.println("[TOSS CONFIRM] method=" + method + ", easyPayProvider=" + easyPayProvider);
+            log.debug("[TOSS CONFIRM] method={}, easyPayProvider={}", method, easyPayProvider);
 
 
             return new TossConfirmResult(status, method, easyPayProvider, resp);

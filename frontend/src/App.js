@@ -12,7 +12,7 @@ import ProfilePage from "./pages/ProfilePage";
 import ChatPage from "./pages/ChatPage";
 import ChatListPage from "./pages/ChatListPage";
 import PostDetailPage from "./pages/PostDetailPage";
-import PostWritePage from "./pages/PostWritePage"; // [추가됨] 게시글 작성 페이지 임포트
+import PostWritePage from "./pages/PostWritePage";
 import ReviewWritePage from "./pages/ReviewWritePage";
 import WalletTopupPage from "./pages/WalletTopupPage";
 import PayTopupSuccessPage from "./pages/PayTopupSuccessPage";
@@ -20,29 +20,31 @@ import PayTopupFailPage from "./pages/PayTopupFailPage";
 import WalletWithdrawPage from "./pages/WalletWithdrawPage";
 import AdminWithdrawListPage from "./pages/AdminWithdrawListPage";
 import SetLocationPage from "./pages/SetLocationPage";
+import { getBackendBaseUrl } from "./utils/backend";
 
 
 //css
 import "./css/App.css";
 
-// 🔹 위치 감시 컴포넌트
 function LocationGuard({ auth }) {
     const navigate = useNavigate();
     const location = useLocation();
 
     useEffect(() => {
-        if (auth.user) {
-            console.log("현재 로그인 유저 정보:", auth.user);
-        }
-
         if (!auth.loading && auth.user && auth.user.auth === "oauth2") {
-            // "위치 정보가 없고(false 혹은 undefined)" AND "현재 설정 페이지가 아니라면"
             if (!auth.user.hasLocation && location.pathname !== "/set-location") {
-                console.log("위치 정보 없음 감지! 설정 페이지로 이동합니다.");
                 navigate("/set-location");
             }
         }
     }, [auth, navigate, location]);
+
+    return null;
+}
+
+function ExternalRedirect({ to }) {
+    useEffect(() => {
+        window.location.replace(to);
+    }, [to]);
 
     return null;
 }
@@ -71,23 +73,23 @@ function App() {
     return (
         <AuthContext.Provider value={auth}>
             <Router>
-                {/* LocationGuard가 실시간으로 위치 설정을 감시합니다 */}
                 <LocationGuard auth={auth} />
 
                 <Routes>
+                    {/* OAuth2 로그인 시작 URL을 프론트 라우팅으로 타지 않게 강제 리다이렉트 */}
+                    <Route
+                        path="/oauth2/authorization/kakao"
+                        element={<ExternalRedirect to={`${getBackendBaseUrl()}/oauth2/authorization/kakao`} />}
+                    />
+
                     <Route path="/wallet/topup/success" element={<PayTopupSuccessPage />} />
                     <Route path="/wallet/topup/fail" element={<PayTopupFailPage />} />
 
-                    {/* 위치 설정 페이지 */}
                     <Route path="/set-location" element={<SetLocationPage />} />
 
-                    {/* [추가됨] 게시글 작성 페이지 */}
-                    {/* 전체 화면을 덮기 위해 Layout 밖에 배치합니다 */}
-                    <Route path="/posts/write/:userId" element={<PostWritePage />} />
+                    <Route path="/posts/write" element={<PostWritePage />} />
 
-                    {/* ⭐⭐⭐ [신규 추가] 거래 후기 작성 페이지 ⭐⭐⭐ */}
-                    {/* 전체 화면을 덮기 위해 Layout 밖에 배치 (HeaderLayout, BottomNav 없음) */}
-                    <Route path="/reviews/write/:userId/:postId/:partnerId" element={<ReviewWritePage />} />
+                    <Route path="/reviews/write/:postId/:partnerId" element={<ReviewWritePage />} />
 
                     <Route element={<Layout />}>
                         <Route path="/" element={<Index />} />
@@ -103,16 +105,15 @@ function App() {
                             }
                         >
                             <Route element={<WithBottomNav />}>
-                                <Route path="/main/:userId" element={<MainPage />} />
+                                <Route path="/main" element={<MainPage />} />
                             </Route>
                         </Route>
 
-                        {/* [수정됨] 게시글 상세 페이지 */}
-                        {/* 검정 테마 오류 해결: backBlack.png -> backWhite.png */}
+                        {/* 게시글 상세 페이지 */}
                         <Route
                             element={
                                 <HeaderLayout
-                                    title="" 
+                                    title=""
                                     isBack={true}
                                     left={
                                         <img className="Header-icon" alt="뒤로가기" src="/backWhite.png" />
@@ -121,7 +122,7 @@ function App() {
                                 />
                             }
                         >
-                            <Route path="/posts/:postId/:userId" element={<PostDetailPage />} />
+                            <Route path="/posts/:postId" element={<PostDetailPage />} />
                         </Route>
 
                         {/* 채팅 목록 페이지 */}
@@ -138,8 +139,8 @@ function App() {
                             }
                         >
                             <Route element={<WithBottomNav />}>
-                                <Route path="/chat/list/:userId" element={<ChatListPage />} />
-                                <Route path="/chat/:userId" element={<ChatListPage />} />
+                                <Route path="/chat/list" element={<ChatListPage />} />
+                                <Route path="/chat" element={<ChatListPage />} />
                             </Route>
                         </Route>
 
@@ -156,9 +157,8 @@ function App() {
                                 />
                             }
                         >
-                            {/* 채팅방 내부에서는 보통 하단 탭바를 숨깁니다 (입력창 때문). 필요시 WithBottomNav 제거 가능 */}
                             <Route element={<WithBottomNav />}>
-                                <Route path="/chat/:roomId/:userId" element={<ChatPage />} />
+                                <Route path="/chat/:roomId" element={<ChatPage />} />
                             </Route>
                         </Route>
 
@@ -176,7 +176,7 @@ function App() {
                             }
                         >
                             <Route element={<WithBottomNav />}>
-                                <Route path="/profile/:userId" element={<ProfilePage />} />
+                                <Route path="/profile" element={<ProfilePage />} />
                             </Route>
                         </Route>
 
@@ -194,7 +194,7 @@ function App() {
                             }
                         >
                             <Route element={<WithBottomNav />}>
-                                <Route path="/wallet/topup/:userId" element={<WalletTopupPage />} />
+                                <Route path="/wallet/topup" element={<WalletTopupPage />} />
                             </Route>
                         </Route>
 
@@ -212,14 +212,13 @@ function App() {
                             }
                         >
                             <Route element={<WithBottomNav />}>
-                                <Route path="/wallet/withdraw/:userId" element={<WalletWithdrawPage />} />
+                                <Route path="/wallet/withdraw" element={<WalletWithdrawPage />} />
                             </Route>
                         </Route>
 
                         {/* 관리자 승인 페이지*/}
                         <Route path="/admin/withdraw-requests" element={<AdminWithdrawListPage />} />
 
-                        {/* 라우터 구분선 */}
                     </Route>
 
                 </Routes>

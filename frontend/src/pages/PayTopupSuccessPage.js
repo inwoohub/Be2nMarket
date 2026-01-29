@@ -29,7 +29,7 @@ export default function PayTopupSuccessPage() {
 
                 setUserId(data.userId || data.id);
             } catch (e) {
-            console.error("failed to load /api/me", e);
+            // error:("failed to load /api/me", e);
             }
         };
         fetchMe();
@@ -57,7 +57,7 @@ export default function PayTopupSuccessPage() {
 
             setConfirmed(true);
         } catch (e) {
-            console.error(e);
+            // error:(e);
             setError(e.message);
         } finally {
             setConfirming(false);

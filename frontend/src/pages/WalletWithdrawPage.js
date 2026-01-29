@@ -1,14 +1,13 @@
 // src/pages/WalletWithdrawPage.js
 
 import React, { useEffect, useState, useRef  } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 
 import "../css/TossPayment.css";
 import "../css/WalletWithdrawPage.css"
 
 export default function WalletWithdrawPage() {
     const navigate = useNavigate();
-    const { userId } = useParams();
     const [amount, setAmount] = useState("");    // 출금 금액
     const [balance, setBalance] = useState(null); // 현재 지갑 잔액
     const [bankCode, setBankCode] = useState("004");
@@ -31,12 +30,12 @@ export default function WalletWithdrawPage() {
                 if (data.success) {
                     setBalance(data.balance);
                 } else {
-                    console.error("잔액 조회 실패", data);
+                    // error:("잔액 조회 실패", data);
                     setError("잔액을 불러오지 못했습니다.");
                 }
             })
             .catch((err) => {
-                console.error("잔액 조회 에러", err);
+                // error:("잔액 조회 에러", err);
                 setError("잔액 조회 중 오류가 발생했습니다.");
             });
     }, []);
@@ -122,19 +121,12 @@ export default function WalletWithdrawPage() {
             }
 
             // ✅ 1초 뒤 프로필 페이지로 이동
-            if (userId) {
-                setTimeout(() => {
-                    navigate(`/profile/${userId}`);
-                }, 1000);
-            } else {
-                // 혹시 userId 없는 경우 대비 (선택)
-                setTimeout(() => {
-                    navigate("/");
-                }, 1000);
-            }
+            setTimeout(() => {
+                navigate(`/profile`);
+            }, 1000);
 
         } catch (err) {
-            console.error("출금 요청 에러", err);
+            // error:("출금 요청 에러", err);
             setError(err.message || "출금 요청 중 오류가 발생했습니다.");
         } finally {
             setSubmitting(false);

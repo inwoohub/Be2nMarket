@@ -1,9 +1,11 @@
 
 import "../css/Index.css";
+import { getBackendBaseUrl } from "../utils/backend";
 
 
 const handleKakaoLogin = () => {
-    window.location.href = "http://localhost:8080/oauth2/authorization/kakao";
+    const backend = getBackendBaseUrl();
+    window.location.href = `${backend}/oauth2/authorization/kakao`;
 };
 
 function Index() {

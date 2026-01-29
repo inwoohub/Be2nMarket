@@ -57,7 +57,7 @@ export default function AdminWithdrawListPage() {
             const json = await res.json();
             setData(json);
         } catch (err) {
-            console.error("출금 요청 목록 조회 에러", err);
+            // error:("출금 요청 목록 조회 에러", err);
             setError(err.message || "목록 조회 중 오류가 발생했습니다.");
         } finally {
             setLoading(false);
@@ -85,7 +85,7 @@ export default function AdminWithdrawListPage() {
             const json = await res.json();
             setLedger(json);
         } catch (err) {
-            console.error("장부 요약 조회 에러", err);
+            // error:("장부 요약 조회 에러", err);
             setLedgerError(err.message || "장부 요약 조회 중 오류가 발생했습니다.");
         } finally {
             setLedgerLoading(false);
@@ -127,7 +127,7 @@ export default function AdminWithdrawListPage() {
             alert("출금 요청이 승인되었습니다.\n(실제 계좌 이체는 별도의 작업으로 처리해야 합니다.)");
             fetchList();
         } catch (err) {
-            console.error("승인 에러", err);
+            // error:("승인 에러", err);
             alert(err.message || "승인 처리 중 오류가 발생했습니다.");
         }
     };
@@ -167,7 +167,7 @@ export default function AdminWithdrawListPage() {
 
             fetchList();
         } catch (err) {
-            console.error("거절 에러", err);
+            // error:("거절 에러", err);
             alert(err.message || "거절 처리 중 오류가 발생했습니다.");
         }
     };
