@@ -23,10 +23,17 @@ public class PostController {
     private final PostService postService;
 
     /**
-     * 1. 메인 페이지 게시글 목록 조회 API
+     * 1. 게시글 목록 조회 API
+     * - sellerId 파라미터가 없으면: 전체 조회 (메인페이지)
+     * - sellerId 파라미터가 있으면: 해당 판매자의 글만 조회 (판매내역 페이지)
      */
     @GetMapping
-    public List<PostListResponseDto> getAllPosts() {
+    public List<PostListResponseDto> getAllPosts(@RequestParam(required = false) Long sellerId) {
+        if (sellerId != null) {
+            // ⭐ 판매자 ID가 있으면 필터링해서 조회
+            return postService.getPostsBySeller(sellerId);
+        }
+        // 없으면 전체 조회
         return postService.getAllPosts();
     }
 
@@ -39,16 +46,7 @@ public class PostController {
     }
 
     /**
-     * [추가됨] 3. 게시글 생성 API
-     * - 경로: POST /api/posts
-     * - Content-Type: multipart/form-data
-     * - 파라미터:
-     * - post (json): 제목, 내용, 가격 등
-     * - images (file): 이미지 파일 목록
-     * - userId (json field - 임시): 로그인 세션 대신 요청 바디나 파라미터로 받음 (실제로는 세션에서 꺼내야 함)
-     * (여기서는 편의상 post DTO 안이나 별도 파라미터로 처리하지 않고, 일단 DTO와 파일을 받습니다.
-     * 유저 ID는 세션 연동 전이라 임시로 1001번 고정하거나 파라미터로 받을 수 있습니다.
-     * 테스트 편의를 위해 DTO 안에 넣지 않고 @RequestPart로 받습니다.)
+     * 3. 게시글 생성 API
      */
     @PostMapping(consumes = {MediaType.MULTIPART_FORM_DATA_VALUE})
     public ResponseEntity<?> createPost(
@@ -62,7 +60,7 @@ public class PostController {
                     "message", "로그인이 필요합니다."
             ));
         }
-        // 실제 서비스 호출 (userId는 파라미터로 받음)
+        
         Long postId = postService.createPost(sessionUser.id(), requestDto, images);
         return ResponseEntity.ok(postId);
     }

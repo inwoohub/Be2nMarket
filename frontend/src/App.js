@@ -12,7 +12,7 @@ import ProfilePage from "./pages/ProfilePage";
 import ChatPage from "./pages/ChatPage";
 import ChatListPage from "./pages/ChatListPage";
 import PostDetailPage from "./pages/PostDetailPage";
-import PostWritePage from "./pages/PostWritePage"; // [추가됨] 게시글 작성 페이지 임포트
+import PostWritePage from "./pages/PostWritePage";
 import ReviewWritePage from "./pages/ReviewWritePage";
 import WalletTopupPage from "./pages/WalletTopupPage";
 import PayTopupSuccessPage from "./pages/PayTopupSuccessPage";
@@ -20,6 +20,8 @@ import PayTopupFailPage from "./pages/PayTopupFailPage";
 import WalletWithdrawPage from "./pages/WalletWithdrawPage";
 import AdminWithdrawListPage from "./pages/AdminWithdrawListPage";
 import SetLocationPage from "./pages/SetLocationPage";
+import SaleListPage from "./pages/SaleListPage";
+import ReviewDetailPage from "./pages/ReviewDetailPage";
 
 
 //css
@@ -81,13 +83,14 @@ function App() {
                     {/* 위치 설정 페이지 */}
                     <Route path="/set-location" element={<SetLocationPage />} />
 
-                    {/* [추가됨] 게시글 작성 페이지 */}
-                    {/* 전체 화면을 덮기 위해 Layout 밖에 배치합니다 */}
+                    {/* 게시글 작성 페이지 */}
                     <Route path="/posts/write/:userId" element={<PostWritePage />} />
 
-                    {/* ⭐⭐⭐ [신규 추가] 거래 후기 작성 페이지 ⭐⭐⭐ */}
-                    {/* 전체 화면을 덮기 위해 Layout 밖에 배치 (HeaderLayout, BottomNav 없음) */}
-                    <Route path="/reviews/write/:userId/:postId/:partnerId" element={<ReviewWritePage />} />
+                    {/* ⭐⭐⭐ [수정됨] 거래 후기 작성 페이지 (맨 뒤에 tradeId 추가) ⭐⭐⭐ */}
+                    <Route path="/reviews/write/:userId/:postId/:partnerId/:tradeId" element={<ReviewWritePage />} />
+
+                    {/* 리뷰 페이지 */}
+                    <Route path="/reviews/:userId" element={<ReviewDetailPage />} />
 
                     <Route element={<Layout />}>
                         <Route path="/" element={<Index />} />
@@ -107,8 +110,7 @@ function App() {
                             </Route>
                         </Route>
 
-                        {/* [수정됨] 게시글 상세 페이지 */}
-                        {/* 검정 테마 오류 해결: backBlack.png -> backWhite.png */}
+                        {/* 게시글 상세 페이지 */}
                         <Route
                             element={
                                 <HeaderLayout
@@ -156,7 +158,6 @@ function App() {
                                 />
                             }
                         >
-                            {/* 채팅방 내부에서는 보통 하단 탭바를 숨깁니다 (입력창 때문). 필요시 WithBottomNav 제거 가능 */}
                             <Route element={<WithBottomNav />}>
                                 <Route path="/chat/:roomId/:userId" element={<ChatPage />} />
                             </Route>
@@ -219,9 +220,9 @@ function App() {
                         {/* 관리자 승인 페이지*/}
                         <Route path="/admin/withdraw-requests" element={<AdminWithdrawListPage />} />
 
-                        {/* 라우터 구분선 */}
                     </Route>
-
+                    {/* 판매 목록 페이지 */}
+                    <Route path="/sale/:userId" element={<SaleListPage />} />
                 </Routes>
             </Router>
         </AuthContext.Provider>

@@ -1,16 +1,21 @@
 import React, { useEffect, useState, useRef } from "react";
 import "../css/Index.css";
 import "../css/ProfilePage.css"
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useParams } from "react-router-dom"; // useParams 추가
 import Modal from "../modal/ProfileModal";
 
 
 function ProfilePage() {
+    // URL에서 userId 가져오기 (App.js 라우트가 /profile/:userId 라고 가정)
+    const { userId: paramUserId } = useParams();
 
     const [imgLoaded, setImgLoaded] = useState(false);
     const [profile, setProfile] = useState(null);
     const [loading, setLoading] = useState(true);
     const [cash, setCash] = useState(null);
+
+    // ⭐ 리뷰 목록 상태 추가
+    const [reviewList, setReviewList] = useState([]);
 
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
     const [editNickname, setEditNickname] = useState("");
@@ -20,7 +25,9 @@ function ProfilePage() {
 
     const navigate = useNavigate();
 
-
+    // 1. 내 정보 불러오기 (기본 프로필 정보)
+    // 주의: 현재는 /api/me만 호출하므로, 남의 프로필에 가도 '내 정보'가 상단에 뜰 수 있습니다.
+    // 남의 프로필 정보를 보려면 백엔드에 /api/profile/{id} 같은 API가 추가로 필요합니다.
     useEffect(() => {
         fetch("/api/me", {
             credentials: "include",   // 세션 쿠키 같이 보내기
@@ -28,9 +35,8 @@ function ProfilePage() {
             .then((res) => res.json())
             .then((data) => {
                 if (data.auth === "oauth2" && data.user) {
-                    setProfile(data.user,);
+                    setProfile(data.user);
                     setEditNickname(data.user.nickname || "");
-
                 }
                 setLoading(false);
             })
@@ -40,6 +46,29 @@ function ProfilePage() {
             });
     }, []);
 
+    // 2. ⭐ [추가됨] 리뷰 목록 불러오기
+    useEffect(() => {
+        // URL에 있는 ID를 사용하거나, 없으면 내 ID(profile.userId)를 사용
+        // (profile이 로드될 때까지 기다려야 할 수도 있음)
+        const targetId = paramUserId || profile?.userId;
+
+        if (!targetId) return;
+
+        fetch(`/api/reviews/list/${targetId}`, {
+            credentials: "include",
+        })
+            .then((res) => res.json())
+            .then((data) => {
+                console.log(">>> 가져온 리뷰 목록:", data);
+                setReviewList(data);
+            })
+            .catch((err) => {
+                console.error("리뷰 조회 실패", err);
+            });
+    }, [paramUserId, profile]); // paramUserId나 profile이 바뀌면 실행
+
+
+    // 프로필 이미지 변경 핸들러들
     const handleProfileEditClick = () => {
         if (fileInputRef.current) {
             fileInputRef.current.click();
@@ -52,7 +81,6 @@ function ProfilePage() {
 
         try {
             setUploading(true);
-
             const formData = new FormData();
             formData.append("file", file);
 
@@ -92,7 +120,6 @@ function ProfilePage() {
                 method: "POST",
                 credentials: "include",
             });
-
             const data = await res.json();
 
             if (!data.success) {
@@ -114,15 +141,10 @@ function ProfilePage() {
         try {
             const res = await fetch("/api/profile", {
                 method: "PATCH",
-                headers: {
-                    "Content-Type": "application/json",
-                },
+                headers: { "Content-Type": "application/json" },
                 credentials: "include",
-                body: JSON.stringify({
-                    nickname: editNickname,
-                }),
+                body: JSON.stringify({ nickname: editNickname }),
             });
-
             const data = await res.json();
 
             if (!data.success) {
@@ -133,7 +155,6 @@ function ProfilePage() {
             setProfile((prev) =>
                 prev ? { ...prev, nickname: data.nickname } : prev
             );
-
             setIsEditModalOpen(false);
         } catch (err) {
             console.error("프로필 수정 에러", err);
@@ -141,8 +162,7 @@ function ProfilePage() {
         }
     };
 
-
-
+    // 잔액 조회
     useEffect(() => {
         fetch("/api/wallet/balance", {
             credentials: "include",
@@ -151,14 +171,33 @@ function ProfilePage() {
             .then((data) => {
                 if (data.success) {
                     setCash(data.balance);
-                } else {
-                    console.error("잔액 조회 실패", data);
                 }
             })
             .catch((err) => {
                 console.error("잔액 조회 에러", err);
             });
     }, []);
+
+    // ⭐ 별점 렌더링 헬퍼 함수
+    const renderStars = (rating) => {
+        const stars = [];
+        for (let i = 1; i <= 5; i++) {
+            stars.push(
+                <span key={i} className={i <= rating ? "star_filled" : "star_empty"}>
+                    ★
+                </span>
+            );
+        }
+        return stars;
+    };
+
+    // ⭐ 날짜 포맷팅 헬퍼 함수
+    const formatDate = (dateString) => {
+        if (!dateString) return "";
+        const date = new Date(dateString);
+        return `${date.getFullYear()}.${String(date.getMonth() + 1).padStart(2, '0')}.${String(date.getDate()).padStart(2, '0')}`;
+    };
+
 
     if (loading) {
         return (
@@ -180,24 +219,13 @@ function ProfilePage() {
         );
     }
 
-
     const nickname = profile.nickname || "Unknown";
-
-    const profileImageUrl =
-        profile.profileImageUrl || "/User.png";
-
-    const mannerTemp =
-        typeof profile.mannerScore === "number"
-            ? profile.mannerScore
-            : 36.5;
-
-    const reviews = "10";
+    const profileImageUrl = profile.profileImageUrl || "/User.png";
+    const mannerTemp = typeof profile.mannerScore === "number" ? profile.mannerScore : 36.5;
     const isAdmin = profile?.role === "admin";
-
-
     const userId = profile?.userId;
     const salePath = userId ? `/sale/${userId}` : "/login";
-    const reviewPath = userId ? `/review/${userId}` : "/login";
+    const reviewPath = userId ? `/reviews/${userId}` : "/login";
 
     return (
         <div className="app-shell">
@@ -227,11 +255,10 @@ function ProfilePage() {
                     <button
                         className="profilepage_profileFix_btn"
                         onClick={() => setIsEditModalOpen(true)}
-                        >
+                    >
                         프로필 수정
                     </button>
                 </div>
-
 
                 {/*무한루프 페이*/}
                 <div className="profilepage_cash">
@@ -258,7 +285,6 @@ function ProfilePage() {
                     </div>
                 </div>
 
-
                 {/* 매너 온도 */}
                 <div className="profilepage_manner">
                     <div className="profilepage_manner_header">
@@ -266,19 +292,15 @@ function ProfilePage() {
                     </div>
 
                     <div className="profilepage_manner_middle">
-                        {/* 가로 막대 게이지 */}
                         <div className="profilepage_manner_value">
                             {mannerTemp.toFixed(1)}°C
                         </div>
-
                         <div className="profilepage_manner_bar">
                             <div
                                 className="profilepage_manner_bar_fill"
                                 style={{ width: `${mannerTemp}%` }}
                             />
                         </div>
-
-                        {/* 눈금 표시 (선택) */}
                         <div className="profilepage_manner_scale">
                             <span>0</span>
                             <span>50</span>
@@ -286,7 +308,6 @@ function ProfilePage() {
                         </div>
                     </div>
                 </div>
-
 
                 {/*판매 물품*/}
                 <Link to={salePath} className="profilepage_sale">
@@ -300,93 +321,83 @@ function ProfilePage() {
                     </div>
                 </Link>
 
-
                 {/*상점 리뷰*/}
                 <div className="profilepage_review">
                     <Link to={reviewPath} className="profilepage_review_sub">
                         <div className="profilepage_sale_left">
-                        <span className="profilepage_sale_title">
-                            상점 리뷰
-                        </span>
+                            <span className="profilepage_sale_title">
+                                상점 리뷰 <span style={{fontSize:'14px', color:'#888'}}>({reviewList.length})</span>
+                            </span>
                         </div>
                         <div className="profilepage_sale_right">
                             <img className="profilepage_right_arrow"  alt="바로가기" src="/right_arrow.png" />
                         </div>
                     </Link>
+                    
                     <div className="profilepage_review_content">
-
-
-                        {/* 리뷰 1 */}
-                        <div className="profilepage_review_card">
-                            <div className="review_card_left">
-                                <div className="review_avatar">
-                                    짱
-                                </div>
+                        {/* ⭐ 동적으로 리뷰 리스트 렌더링 */}
+                        {reviewList.length === 0 ? (
+                            <div style={{ padding: '20px', textAlign: 'center', color: '#999', fontSize: '14px' }}>
+                                아직 받은 후기가 없어요.
                             </div>
+                        ) : (
+                            reviewList.map((review) => (
+                                <div key={review.reviewId} className="profilepage_review_card">
+                                    <div className="review_card_left">
+                                        {/* 프로필 이미지가 없으면 닉네임 첫 글자나 기본 아이콘 표시 */}
+                                        {review.writerProfileUrl ? (
+                                            <img 
+                                                src={review.writerProfileUrl} 
+                                                alt="avatar" 
+                                                className="review_avatar_img" 
+                                                style={{width:'40px', height:'40px', borderRadius:'50%', objectFit:'cover'}}
+                                            />
+                                        ) : (
+                                            <div className="review_avatar">
+                                                {review.writerNickname ? review.writerNickname[0] : "?"}
+                                            </div>
+                                        )}
+                                    </div>
 
-                            <div className="review_card_right">
-                                <div className="review_card_top">
-                                    <span className="review_from_nickname">
-                                        짱구아빠
-                                    </span>
-                                    <span className="review_created_at">
-                                        2025.11.24
-                                    </span>
+                                    <div className="review_card_right">
+                                        <div className="review_card_top">
+                                            <span className="review_from_nickname">
+                                                {review.writerNickname}
+                                            </span>
+                                            <span className="review_created_at">
+                                                {formatDate(review.createdAt)}
+                                            </span>
+                                        </div>
+
+                                        <div className="review_card_rating">
+                                            {renderStars(review.rating)}
+                                        </div>
+
+                                        <p className="review_card_comment">
+                                            {review.content}
+                                        </p>
+                                        
+                                        {/* 키워드(태그)가 있다면 표시 */}
+                                        {review.keywords && review.keywords.length > 0 && (
+                                            <div style={{display:'flex', gap:'5px', flexWrap:'wrap', marginTop:'5px'}}>
+                                                {review.keywords.map((keyword, idx) => (
+                                                    <span key={idx} style={{
+                                                        backgroundColor: '#f0f0f0', 
+                                                        color: '#555', 
+                                                        fontSize: '11px', 
+                                                        padding: '3px 6px', 
+                                                        borderRadius: '4px'
+                                                    }}>
+                                                        {keyword}
+                                                    </span>
+                                                ))}
+                                            </div>
+                                        )}
+                                        
+                                    </div>
                                 </div>
-
-                                <div className="review_card_rating">
-                                    <span className="star_filled">★</span>
-                                    <span className="star_filled">★</span>
-                                    <span className="star_filled">★</span>
-                                    <span className="star_filled">★</span>
-                                    <span className="star_empty">★</span>
-                                </div>
-
-                                <p className="review_card_comment">
-                                    상태가 좋아요. 시간 약속도 잘 지키셨어요!
-                                </p>
-
-                                <div className="review_card_trade">
-                                    닌텐도 스위치 거래
-                                </div>
-                            </div>
-                        </div>
-
-                        {/* 리뷰 2 */}
-                        <div className="profilepage_review_card">
-                            <div className="review_card_left">
-                                <div className="review_avatar">
-                                    훈
-                                </div>
-                            </div>
-
-                            <div className="review_card_right">
-                                <div className="review_card_top">
-                                    <span className="review_from_nickname">
-                                        훈이
-                                    </span>
-                                    <span className="review_created_at">
-                                        2025.11.20
-                                    </span>
-                                </div>
-
-                                <div className="review_card_rating">
-                                    <span className="star_filled">★</span>
-                                    <span className="star_filled">★</span>
-                                    <span className="star_filled">★</span>
-                                    <span className="star_filled">★</span>
-                                    <span className="star_filled">★</span>
-                                </div>
-
-                                <p className="review_card_comment">
-                                    친절하고 응답도 빨라요. 또 거래하고 싶어요 😊
-                                </p>
-
-                                <div className="review_card_trade">
-                                    책 3권 세트 거래
-                                </div>
-                            </div>
-                        </div>
+                            ))
+                        )}
 
                         <div className="review_bottom_magrin"></div>
 
@@ -469,11 +480,7 @@ function ProfilePage() {
                 </div>
             </Modal>
         </div>
-
-
     );
 }
 
 export default ProfilePage;
-
-
